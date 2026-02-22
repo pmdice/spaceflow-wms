@@ -1,0 +1,182 @@
+[
+  {
+    "id": "PAL-00001",
+    "destination": "Zürich",
+    "status": "delayed",
+    "urgency": "high",
+    "weightKg": 850,
+    "lastScannedAt": "2026-02-21T08:30:00.000Z",
+    "logicalAddress": { "id": "LOC-A-01-05-01", "zone": "A", "aisle": 1, "bay": 5, "level": 1 }
+  },
+  {
+    "id": "PAL-00002",
+    "destination": "Bern",
+    "status": "stored",
+    "urgency": "low",
+    "weightKg": 320,
+    "lastScannedAt": "2026-02-22T09:15:00.000Z",
+    "logicalAddress": { "id": "LOC-B-04-12-02", "zone": "B", "aisle": 4, "bay": 12, "level": 2 }
+  },
+  {
+    "id": "PAL-00003",
+    "destination": "Zürich",
+    "status": "transit",
+    "urgency": "medium",
+    "weightKg": 1100,
+    "lastScannedAt": "2026-02-22T14:20:00.000Z",
+    "logicalAddress": { "id": "LOC-C-01-01-01", "zone": "C", "aisle": 1, "bay": 1, "level": 1 }
+  },
+  {
+    "id": "PAL-00004",
+    "destination": "Basel",
+    "status": "stored",
+    "urgency": "low",
+    "weightKg": 450,
+    "lastScannedAt": "2026-02-20T11:45:00.000Z",
+    "logicalAddress": { "id": "LOC-A-02-08-03", "zone": "A", "aisle": 2, "bay": 8, "level": 3 }
+  },
+  {
+    "id": "PAL-00005",
+    "destination": "Bern",
+    "status": "delayed",
+    "urgency": "high",
+    "weightKg": 980,
+    "lastScannedAt": "2026-02-21T16:00:00.000Z",
+    "logicalAddress": { "id": "LOC-B-05-10-01", "zone": "B", "aisle": 5, "bay": 10, "level": 1 }
+  },
+  {
+    "id": "PAL-00006",
+    "destination": "Genf",
+    "status": "stored",
+    "urgency": "medium",
+    "weightKg": 210,
+    "lastScannedAt": "2026-02-22T07:10:00.000Z",
+    "logicalAddress": { "id": "LOC-A-03-15-02", "zone": "A", "aisle": 3, "bay": 15, "level": 2 }
+  },
+  {
+    "id": "PAL-00007",
+    "destination": "Zürich",
+    "status": "stored",
+    "urgency": "low",
+    "weightKg": 670,
+    "lastScannedAt": "2026-02-21T10:30:00.000Z",
+    "logicalAddress": { "id": "LOC-C-02-05-04", "zone": "C", "aisle": 2, "bay": 5, "level": 4 }
+  },
+  {
+    "id": "PAL-00008",
+    "destination": "Lugano",
+    "status": "transit",
+    "urgency": "high",
+    "weightKg": 440,
+    "lastScannedAt": "2026-02-22T15:50:00.000Z",
+    "logicalAddress": { "id": "LOC-B-01-02-01", "zone": "B", "aisle": 1, "bay": 2, "level": 1 }
+  },
+  {
+    "id": "PAL-00009",
+    "destination": "Basel",
+    "status": "delayed",
+    "urgency": "medium",
+    "weightKg": 890,
+    "lastScannedAt": "2026-02-20T09:00:00.000Z",
+    "logicalAddress": { "id": "LOC-A-04-20-02", "zone": "A", "aisle": 4, "bay": 20, "level": 2 }
+  },
+  {
+    "id": "PAL-00010",
+    "destination": "Bern",
+    "status": "transit",
+    "urgency": "low",
+    "weightKg": 150,
+    "lastScannedAt": "2026-02-22T13:10:00.000Z",
+    "logicalAddress": { "id": "LOC-C-03-08-01", "zone": "C", "aisle": 3, "bay": 8, "level": 1 }
+  },
+  {
+    "id": "PAL-00011",
+    "destination": "Zürich",
+    "status": "delayed",
+    "urgency": "high",
+    "weightKg": 1200,
+    "lastScannedAt": "2026-02-21T18:20:00.000Z",
+    "logicalAddress": { "id": "LOC-B-02-11-03", "zone": "B", "aisle": 2, "bay": 11, "level": 3 }
+  },
+  {
+    "id": "PAL-00012",
+    "destination": "Luzern",
+    "status": "stored",
+    "urgency": "low",
+    "weightKg": 560,
+    "lastScannedAt": "2026-02-22T08:45:00.000Z",
+    "logicalAddress": { "id": "LOC-A-01-18-04", "zone": "A", "aisle": 1, "bay": 18, "level": 4 }
+  },
+  {
+    "id": "PAL-00013",
+    "destination": "St. Gallen",
+    "status": "stored",
+    "urgency": "medium",
+    "weightKg": 730,
+    "lastScannedAt": "2026-02-21T14:15:00.000Z",
+    "logicalAddress": { "id": "LOC-C-04-14-02", "zone": "C", "aisle": 4, "bay": 14, "level": 2 }
+  },
+  {
+    "id": "PAL-00014",
+    "destination": "Bern",
+    "status": "delayed",
+    "urgency": "high",
+    "weightKg": 390,
+    "lastScannedAt": "2026-02-20T17:30:00.000Z",
+    "logicalAddress": { "id": "LOC-A-05-02-01", "zone": "A", "aisle": 5, "bay": 2, "level": 1 }
+  },
+  {
+    "id": "PAL-00015",
+    "destination": "Zürich",
+    "status": "stored",
+    "urgency": "low",
+    "weightKg": 810,
+    "lastScannedAt": "2026-02-22T11:00:00.000Z",
+    "logicalAddress": { "id": "LOC-B-03-09-02", "zone": "B", "aisle": 3, "bay": 9, "level": 2 }
+  },
+  {
+    "id": "PAL-00016",
+    "destination": "Winterthur",
+    "status": "transit",
+    "urgency": "medium",
+    "weightKg": 520,
+    "lastScannedAt": "2026-02-22T16:45:00.000Z",
+    "logicalAddress": { "id": "LOC-C-01-05-03", "zone": "C", "aisle": 1, "bay": 5, "level": 3 }
+  },
+  {
+    "id": "PAL-00017",
+    "destination": "Genf",
+    "status": "delayed",
+    "urgency": "high",
+    "weightKg": 940,
+    "lastScannedAt": "2026-02-21T09:20:00.000Z",
+    "logicalAddress": { "id": "LOC-A-02-12-01", "zone": "A", "aisle": 2, "bay": 12, "level": 1 }
+  },
+  {
+    "id": "PAL-00018",
+    "destination": "Basel",
+    "status": "stored",
+    "urgency": "low",
+    "weightKg": 280,
+    "lastScannedAt": "2026-02-22T10:10:00.000Z",
+    "logicalAddress": { "id": "LOC-B-04-03-04", "zone": "B", "aisle": 4, "bay": 3, "level": 4 }
+  },
+  {
+    "id": "PAL-00019",
+    "destination": "Zürich",
+    "status": "transit",
+    "urgency": "high",
+    "weightKg": 1050,
+    "lastScannedAt": "2026-02-22T12:30:00.000Z",
+    "logicalAddress": { "id": "LOC-C-02-19-02", "zone": "C", "aisle": 2, "bay": 19, "level": 2 }
+  },
+  {
+    "id": "PAL-00020",
+    "destination": "Bern",
+    "status": "stored",
+    "urgency": "medium",
+    "weightKg": 610,
+    "lastScannedAt": "2026-02-21T15:40:00.000Z",
+    "logicalAddress": { "id": "LOC-A-03-07-03", "zone": "A", "aisle": 3, "bay": 7, "level": 3 }
+  }
+]
