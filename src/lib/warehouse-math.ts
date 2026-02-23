@@ -1,23 +1,22 @@
+// src/lib/warehouse-math.ts
 import { StorageLocation } from '@/types/wms';
 import { WAREHOUSE_CONFIG } from './constants';
 import * as THREE from 'three';
 
-const { AISLE_SPACING_X, BAY_SPACING_Z, LEVEL_HEIGHT_Y, START_OFFSET } = WAREHOUSE_CONFIG;
+const {
+    AISLE_WIDTH, BAY_WIDTH, LEVEL_HEIGHT,
+    START_OFFSET, SHELF_SIZE
+} = WAREHOUSE_CONFIG;
 
-// Diese Funktion ist das Herzstück der 3D-Positionierung.
-// Sie ist "rein" (pure function) – gleicher Input ergibt immer gleichen Output.
 export const calculate3DPosition = (location: StorageLocation): THREE.Vector3 => {
+    // X: Gang-Position + halbe Regalbreite (da der Ursprung mittig ist)
+    const x = START_OFFSET.x + (location.aisle * (AISLE_WIDTH + SHELF_SIZE[2]));
 
-    // Berechnung der X-Position basierend auf der Reihe (Aisle)
-    // Wir multiplizieren einfach die Gang-Nummer mit dem Abstand.
-    const x = START_OFFSET.x + (location.aisle * AISLE_SPACING_X);
+    // Y: Ebenen-Höhe. Level 1 ist unten. Wir addieren etwas Offset, damit die Palette AUF dem Boden steht.
+    const y = START_OFFSET.y + ((location.level - 1) * LEVEL_HEIGHT) + 0.1;
 
-    // Berechnung der Y-Höhe basierend auf der Ebene (Level)
-    // Wichtig: Level 1 ist am Boden, also y=0. Deshalb (level - 1).
-    const y = START_OFFSET.y + ((location.level - 1) * LEVEL_HEIGHT_Y);
-
-    // Berechnung der Z-Tiefe basierend auf der Sektion (Bay)
-    const z = START_OFFSET.z + (location.bay * BAY_SPACING_Z);
+    // Z: Position im Gang
+    const z = START_OFFSET.z + (location.bay * BAY_WIDTH);
 
     return new THREE.Vector3(x, y, z);
 };
