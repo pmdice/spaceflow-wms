@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
     type ColumnDef,
     type SortingState,
@@ -9,6 +9,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
 import type { SpatialPallet } from '@/types/wms';
 import { ArrowUpDown, AlertCircle, Clock, CheckCircle2, Package } from 'lucide-react';
@@ -27,6 +28,7 @@ export const LogisticsTable = () => {
     const pallets = useLogisticsStore((state) => state.filteredPallets);
     const activeHighlightColor = useLogisticsStore((state) => state.activeHighlightColor);
     const [sorting, setSorting] = useState<SortingState>([]);
+    const parentRef = useRef<HTMLDivElement>(null);
 
     const getStatusConfig = (status: SpatialPallet['status']) => {
         switch (status) {
@@ -136,9 +138,22 @@ export const LogisticsTable = () => {
         getSortedRowModel: getSortedRowModel(),
     });
 
+    const rows = table.getRowModel().rows;
+    const rowVirtualizer = useVirtualizer({
+        count: rows.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 72,
+        overscan: 8,
+    });
+    const virtualRows = rowVirtualizer.getVirtualItems();
+    const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
+    const paddingBottom = virtualRows.length > 0
+        ? rowVirtualizer.getTotalSize() - virtualRows[virtualRows.length - 1].end
+        : 0;
+
     return (
         <div className="flex h-full min-h-0 flex-col transition-all duration-500">
-            <div className="flex-1 min-h-0 overflow-auto relative custom-scrollbar">
+            <div ref={parentRef} className="flex-1 min-h-0 overflow-auto relative custom-scrollbar">
                 <Table>
                     <TableHeader className="sticky top-0 z-20 bg-muted/30 backdrop-blur-sm">
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -152,8 +167,16 @@ export const LogisticsTable = () => {
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows.length ? (
-                            table.getRowModel().rows.map((row) => (
+                        {rows.length ? (
+                            <>
+                                {paddingTop > 0 && (
+                                    <TableRow className="hover:bg-transparent border-0">
+                                        <TableCell style={{ height: `${paddingTop}px`, padding: 0 }} colSpan={columns.length} />
+                                    </TableRow>
+                                )}
+                                {virtualRows.map((virtualRow) => {
+                                    const row = rows[virtualRow.index];
+                                    return (
                                 <TableRow
                                     key={row.id}
                                     className="h-[72px] border-[#D1D1D1]/10 hover:bg-white/30"
@@ -167,7 +190,14 @@ export const LogisticsTable = () => {
                                         </TableCell>
                                     ))}
                                 </TableRow>
-                            ))
+                                    );
+                                })}
+                                {paddingBottom > 0 && (
+                                    <TableRow className="hover:bg-transparent border-0">
+                                        <TableCell style={{ height: `${paddingBottom}px`, padding: 0 }} colSpan={columns.length} />
+                                    </TableRow>
+                                )}
+                            </>
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-40 text-center">
