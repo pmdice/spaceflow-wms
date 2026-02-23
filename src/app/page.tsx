@@ -75,7 +75,7 @@ export default function DashboardPage() {
             {/* We control pointer-events based on the is3DInteractive state */}
             <div className={cn(
                 "absolute inset-0 z-0 transition-opacity duration-700 ease-in-out",
-                is3DInteractive ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-80"
+                is3DInteractive ? "pointer-events-auto opacity-100" : "pointer-events-auto opacity-80"
             )}>
                 <WarehouseScene />
             </div>
