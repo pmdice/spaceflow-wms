@@ -53,55 +53,48 @@ export const MagicSearchbar = () => {
     };
 
     return (
-        <div className="w-full max-w-3xl mx-auto">
+        <div className="w-full max-w-xl">
             <form
                 onSubmit={handleSubmit}
                 className={cn(
-                    "relative flex items-center w-full transition-all duration-300",
-                    "bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden",
-                    isFiltered ? "ring-2 ring-blue-500 border-transparent" : "focus-within:ring-2 focus-within:ring-gray-300"
+                    "relative flex items-center w-full transition-all duration-500 ease-in-out",
+                    "bg-white/40 backdrop-blur-md rounded-2xl shadow-lg border border-white/30 overflow-hidden",
+                    "hover:bg-white/60",
+                    isFiltered ? "ring-2 ring-[#BC804C]/20 border-[#BC804C]/50" : "focus-within:border-[#BC804C]/50"
                 )}
             >
-                {/* Das KI-Icon als optischer Anker */}
-                <div className="pl-4 pr-2 text-blue-500">
-                    <Sparkles className="w-5 h-5" />
+                <div className={cn(
+                    "pl-5 pr-2 transition-colors duration-300",
+                    isSearching ? "text-[#BC804C]" : "text-[#666666]"
+                )}>
+                    <Sparkles className={cn("w-4 h-4", isSearching && "animate-pulse")} />
                 </div>
 
                 <input
                     type="text"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Frag die KI: 'Zeig mir verspätete Paletten für Bern in rot...'"
-                    className="w-full py-4 pr-14 text-gray-700 bg-transparent outline-none placeholder:text-gray-400"
+                    placeholder="Search space or ask AI..."
+                    className="w-full py-4 pr-12 text-[#2D2D2D] bg-transparent outline-none placeholder:text-[#666666]/60 text-sm font-medium"
                     disabled={isSearching}
                 />
 
-                {/* Lade-Spinner oder X-Button zum Zurücksetzen */}
                 <div className="absolute right-3 flex items-center gap-2">
                     {isSearching ? (
-                        <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                        <Loader2 className="w-4 h-4 text-[#BC804C] animate-spin" />
                     ) : (
                         isFiltered && (
                             <button
                                 type="button"
                                 onClick={handleClear}
-                                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-                                title="Filter zurücksetzen"
+                                className="p-1 text-[#666666] hover:text-[#2D2D2D] transition-colors"
                             >
-                                <X className="w-5 h-5" />
+                                <X className="w-4 h-4" />
                             </button>
                         )
                     )}
                 </div>
             </form>
-
-            {/* Visuelles Feedback für den User, dass ein Filter aktiv ist */}
-            {isFiltered && !isSearching && (
-                <div className="mt-2 text-sm text-blue-600 font-medium flex items-center gap-1 justify-center animate-in fade-in slide-in-from-top-2">
-                    <Sparkles className="w-3 h-3" />
-                    KI-Filter ist aktiv.
-                </div>
-            )}
         </div>
     );
 };
