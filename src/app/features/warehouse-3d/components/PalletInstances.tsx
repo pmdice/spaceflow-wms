@@ -28,6 +28,9 @@ export const PalletInstances = () => {
         return new Set(filteredPallets.map(p => p.id));
     }, [filteredPallets]);
 
+    // Neu: Wir prüfen, ob überhaupt ein Filter aktiv ist
+    const isFiltered = allPallets.length !== filteredPallets.length;
+
 
     // 3. Der Render-Loop (Reagiert auf Änderungen im Store)
     useEffect(() => {
@@ -46,16 +49,16 @@ export const PalletInstances = () => {
             // B) Farbe bestimmen (Das ist die Visualisierung der KI-Suche!)
             const isPartOfFilter = filteredIds.has(pallet.id);
 
-            if (isPartOfFilter && highlightColorHex) {
+            if (isFiltered && isPartOfFilter && highlightColorHex) {
                 // Wenn gefiltert UND eine Farbe von der KI kam -> KI-Farbe nutzen
                 highlightColor.set(highlightColorHex);
                 meshRef.current!.setColorAt(index, highlightColor);
-            } else if (isPartOfFilter && !highlightColorHex) {
+            } else if (isFiltered && isPartOfFilter && !highlightColorHex) {
                 // Wenn gefiltert, aber keine spezifische Farbe -> Standard-Blau
                 highlightColor.set("#3b82f6");
                 meshRef.current!.setColorAt(index, highlightColor);
             } else {
-                // Nicht Teil des Filters -> Basis-Grau und etwas transparenter wirken lassen
+                // Nicht Teil des Filters ODER kein Filter aktiv -> Basis-Grau
                 meshRef.current!.setColorAt(index, BaseColor);
             }
         });
@@ -64,7 +67,7 @@ export const PalletInstances = () => {
         meshRef.current.instanceMatrix.needsUpdate = true;
         if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
 
-    }, [allPallets, filteredIds, highlightColorHex, dummyMatrix, highlightColor]);
+    }, [allPallets, filteredIds, highlightColorHex, isFiltered, dummyMatrix, highlightColor]);
 
 
     return (
