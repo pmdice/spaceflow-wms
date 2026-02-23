@@ -26,9 +26,9 @@ export const LogisticsTable = () => {
     const getStatusConfig = (status: string) => {
         switch (status) {
             case 'delayed': return { icon: AlertCircle, color: 'text-white', bg: 'bg-[#BC804C]', border: 'border-[#BC804C]', label: 'Delayed' };
-            case 'transit': return { icon: Clock, color: 'text-[#2D2D2D]', bg: 'bg-[#EADDCA]', border: 'border-[#BC804C]/20', label: 'In Transit' };
-            case 'stored': return { icon: CheckCircle2, color: 'text-[#2D2D2D]', bg: 'bg-white', border: 'border-[#D1D1D1]', label: 'Stored' };
-            default: return { icon: Package, color: 'text-[#666666]', bg: 'bg-[#D1D1D1]/30', border: 'border-transparent', label: 'Unknown' };
+            case 'transit': return { icon: Clock, color: 'text-[#2D2D2D]', bg: 'bg-muted/50', border: 'border-muted-foreground/20', label: 'In Transit' };
+            case 'stored': return { icon: CheckCircle2, color: 'text-[#2D2D2D]', bg: 'bg-background', border: 'border-border', label: 'Stored' };
+            default: return { icon: Package, color: 'text-muted-foreground', bg: 'bg-muted/30', border: 'border-transparent', label: 'Unknown' };
         }
     };
 
@@ -45,9 +45,9 @@ export const LogisticsTable = () => {
     }
 
     return (
-        <div className="bg-[#F0F0F0]/50 rounded-[2rem] border border-white/20 shadow-sm overflow-hidden flex flex-col h-[500px] transition-all duration-500">
+        <div className="flex flex-col h-[400px] transition-all duration-500">
             {/* Tabellen-Header */}
-            <div className="grid grid-cols-5 gap-4 px-8 py-4 border-b border-[#D1D1D1]/30 bg-white/10 text-[10px] font-bold text-[#666666] uppercase tracking-[0.15em]">
+            <div className="grid grid-cols-5 gap-4 px-8 py-3 border-b bg-muted/30 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 <div>ID</div>
                 <div>Destination</div>
                 <div>Status</div>

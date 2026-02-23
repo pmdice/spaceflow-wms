@@ -53,43 +53,42 @@ export const MagicSearchbar = () => {
     };
 
     return (
-        <div className="w-full max-w-xl">
+        <div className="w-full">
             <form
                 onSubmit={handleSubmit}
                 className={cn(
-                    "relative flex items-center w-full transition-all duration-500 ease-in-out",
-                    "bg-white/40 backdrop-blur-md rounded-2xl shadow-lg border border-white/30 overflow-hidden",
-                    "hover:bg-white/60",
-                    isFiltered ? "ring-2 ring-[#BC804C]/20 border-[#BC804C]/50" : "focus-within:border-[#BC804C]/50"
+                    "relative flex items-center w-full transition-all duration-300 ease-in-out",
+                    "bg-transparent rounded-xl overflow-hidden",
+                    isFiltered ? "ring-2 ring-primary/20" : ""
                 )}
             >
                 <div className={cn(
-                    "pl-5 pr-2 transition-colors duration-300",
-                    isSearching ? "text-[#BC804C]" : "text-[#666666]"
+                    "pl-4 pr-2 transition-colors duration-300",
+                    isSearching ? "text-primary" : "text-muted-foreground"
                 )}>
-                    <Sparkles className={cn("w-4 h-4", isSearching && "animate-pulse")} />
+                    <Sparkles className={cn("size-4", isSearching && "animate-pulse")} />
                 </div>
 
                 <input
                     type="text"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Search space or ask AI..."
-                    className="w-full py-4 pr-12 text-[#2D2D2D] bg-transparent outline-none placeholder:text-[#666666]/60 text-sm font-medium"
+                    placeholder="Ask AI Search..."
+                    className="w-full py-3 pr-12 text-sm bg-transparent outline-none placeholder:text-muted-foreground/50 font-medium"
                     disabled={isSearching}
                 />
 
                 <div className="absolute right-3 flex items-center gap-2">
                     {isSearching ? (
-                        <Loader2 className="w-4 h-4 text-[#BC804C] animate-spin" />
+                        <Loader2 className="size-4 text-primary animate-spin" />
                     ) : (
                         isFiltered && (
                             <button
                                 type="button"
                                 onClick={handleClear}
-                                className="p-1 text-[#666666] hover:text-[#2D2D2D] transition-colors"
+                                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
                             >
-                                <X className="w-4 h-4" />
+                                <X className="size-4" />
                             </button>
                         )
                     )}
