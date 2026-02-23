@@ -8,21 +8,20 @@ import { WarehouseScene } from '@/app/features/warehouse-3d/components/Warehouse
 import {
     Box,
     Activity,
+    Maximize,
     Minimize,
-    MousePointer2,
     PackageCheck,
 } from 'lucide-react';
 import {
     Card,
     CardContent,
-    CardHeader,
-    CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge"; // Ensure this is installed via shadcn
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+
+const BASE_LIST_PANEL_HEIGHT_DVH = 48;
 
 export default function DashboardPage() {
     const fetchData = useLogisticsStore((state) => state.fetchData);
@@ -33,14 +32,24 @@ export default function DashboardPage() {
     const filteredCount = pallets.length;
 
     const delayedCount = pallets.filter(p => p.status === 'delayed').length;
-    const transitCount = pallets.filter(p => p.status === 'transit').length;
 
-    // --- NEW: 3D Interaction State ---
+    // --- View State ---
     const [is3DInteractive, setIs3DInteractive] = useState(false);
+    const [isListExpanded, setIsListExpanded] = useState(false);
 
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    const toggleListExpanded = () => {
+        setIsListExpanded((prev) => !prev);
+        setIs3DInteractive(false);
+    };
+
+    const enter3DMode = () => {
+        setIsListExpanded(false);
+        setIs3DInteractive(true);
+    };
 
     if (error) {
         return (
@@ -60,7 +69,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <SidebarInset className="relative h-screen bg-[#F4F4F5] overflow-hidden font-sans flex flex-col">
+        <SidebarInset className="relative h-dvh bg-[#F4F4F5] overflow-hidden font-sans flex flex-col">
 
             {/* --- 1. LAYER: 3D BACKGROUND --- */}
             {/* We control pointer-events based on the is3DInteractive state */}
@@ -105,20 +114,33 @@ export default function DashboardPage() {
                     </div>
                 </header>
 
-                {/* --- FLOATING CONTROLS --- */}
+                {/* --- ENTER 3D MODE BUTTON (Canvas top-right) --- */}
                 <div className={cn(
-                    "flex-1 p-6 flex flex-col justify-end transition-all duration-500 ease-in-out",
-                    is3DInteractive ? "opacity-0 translate-y-[-20px]" : "opacity-100 translate-y-0"
+                    "absolute top-20 right-6 pointer-events-auto transition-all duration-500 ease-in-out z-30",
+                    is3DInteractive ? "opacity-0 translate-y-[-10px] scale-95 pointer-events-none" : "opacity-100 translate-y-0 scale-100"
                 )}>
-                    {/* INTERACT 3D BUTTON (Redesigned with Ghost style) */}
-                    <div className="flex justify-center mb-8 pointer-events-auto">
+                    <div className="flex items-center gap-2">
                         <Button
                             variant="ghost"
-                            onClick={() => setIs3DInteractive(true)}
-                            className="group"
+                            size="sm"
+                            onClick={toggleListExpanded}
+                            className="h-9 bg-white/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-white/60 backdrop-blur-md shadow-[0_8px_24px_rgba(15,23,42,0.12)]"
                         >
-                            <MousePointer2 className="transition-transform duration-200 group-hover:-translate-x-0.5" />
-                            Interact with 3D Model
+                            {isListExpanded ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
+                            {isListExpanded ? "Base layout" : "Full list"}
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={enter3DMode}
+                            className={cn(
+                                "bg-white/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-white/60 backdrop-blur-md shadow-[0_8px_24px_rgba(15,23,42,0.12)]",
+                                isListExpanded ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100"
+                            )}
+                            aria-label="Enter fullscreen 3D mode"
+                            title="Fullscreen 3D view"
+                        >
+                            <Maximize className="size-4" />
                         </Button>
                     </div>
                 </div>
@@ -137,53 +159,20 @@ export default function DashboardPage() {
                     </button>
                 </div>
 
+                {/* Spacer keeps bottom panel docked while controls float above canvas */}
+                <div className="flex-1" />
+
                 {/* --- BOTTOM DATA PANEL (Edge to Edge Drawer) --- */}
                 {/* It slides down out of view when 3D mode is active */}
                 <div className={cn(
-                    "pointer-events-auto w-full transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                    "pointer-events-auto w-full shrink-0 transition-[height,transform] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
                     is3DInteractive ? "translate-y-full" : "translate-y-0"
-                )}>
-                    <Card className="bg-white/90 backdrop-blur-2xl border-t border-white/60 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] rounded-none h-[45vh] flex flex-col">
-
-                        {/* Panel Header: Optimised & Modernized */}
-                        <CardHeader className="border-b bg-white/40 backdrop-blur-md py-6 px-8 flex flex-col md:flex-row items-center justify-between gap-6 sticky top-0 z-20">
-
-                            {/* Left: Titles & Tags */}
-                            <div className="flex flex-col gap-1.5 min-w-[200px]">
-                                <div className="flex items-center gap-3">
-                                    <CardTitle className="text-xl font-bold tracking-tight">Inventory Roster</CardTitle>
-                                    {filteredCount < totalPallets && (
-                                        <Badge variant="secondary" className="bg-[#BC804C]/10 text-[#BC804C] hover:bg-[#BC804C]/20 border-none animate-in fade-in zoom-in duration-300">
-                                            AI Filter Active
-                                        </Badge>
-                                    )}
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="size-1.5 rounded-full bg-blue-500" />
-                                        <span className="text-xs font-medium text-muted-foreground">Transit: {transitCount}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="size-1.5 rounded-full bg-[#BC804C]" />
-                                        <span className="text-xs font-medium text-muted-foreground">Delayed: {delayedCount}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Center: The Magic Searchbar - Now Centered and Modernized! */}
-                            <div className="flex-1 max-w-xl w-full">
-                                <MagicSearchbar />
-                            </div>
-
-                            {/* Right: Action Buttons / Stats (Balance) */}
-                            <div className="hidden lg:flex items-center gap-2 min-w-[200px] justify-end">
-                                <div className="text-right">
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Pallets</p>
-                                    <p className="text-sm font-bold text-gray-900">{filteredCount} <span className="text-gray-400 font-normal">showing</span></p>
-                                </div>
-                            </div>
-
-                        </CardHeader>
+                )}
+                style={{ height: isListExpanded ? "calc(100dvh - 4rem)" : `${BASE_LIST_PANEL_HEIGHT_DVH}dvh` }}>
+                    <Card className="bg-white/90 backdrop-blur-2xl border-t border-white/60 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] rounded-none h-full flex flex-col py-0 gap-0">
+                        <div className="absolute left-1/2 top-0 z-30 w-full max-w-xl -translate-x-1/2 -translate-y-full px-4 md:px-0 pointer-events-auto">
+                            <MagicSearchbar />
+                        </div>
 
                         {/* Panel Body: The Virtualized Table */}
                         <CardContent className="p-0 overflow-hidden flex-1 relative">
