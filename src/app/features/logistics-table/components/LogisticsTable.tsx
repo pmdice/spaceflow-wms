@@ -1,29 +1,34 @@
 'use client';
 
-import { useRef } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useMemo, useState } from 'react';
+import {
+    type ColumnDef,
+    type SortingState,
+    flexRender,
+    getCoreRowModel,
+    getSortedRowModel,
+    useReactTable,
+} from '@tanstack/react-table';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
-import { Package, MapPin, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Dein Tailwind-Merge Helper
+import type { SpatialPallet } from '@/types/wms';
+import { ArrowUpDown, AlertCircle, Clock, CheckCircle2, Package } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 export const LogisticsTable = () => {
-    // 1. Daten aus dem Store holen
     const pallets = useLogisticsStore((state) => state.filteredPallets);
     const activeHighlightColor = useLogisticsStore((state) => state.activeHighlightColor);
+    const [sorting, setSorting] = useState<SortingState>([]);
 
-    // 2. Referenz für den scrollbaren Container
-    const parentRef = useRef<HTMLDivElement>(null);
-
-    // 3. Der Virtualizer (Das Geheimnis für 60fps bei 10.000 Reihen)
-    const rowVirtualizer = useVirtualizer({
-        count: pallets.length,
-        getScrollElement: () => parentRef.current,
-        estimateSize: () => 72, // Geschätzte Höhe einer Reihe in Pixeln
-        overscan: 5, // Render 5 Reihen extra oben/unten, um Flackern beim Scrollen zu vermeiden
-    });
-
-    // Helper für Status-Icons
-    const getStatusConfig = (status: string) => {
+    const getStatusConfig = (status: SpatialPallet['status']) => {
         switch (status) {
             case 'delayed': return { icon: AlertCircle, color: 'text-white', bg: 'bg-[#BC804C]', border: 'border-[#BC804C]', label: 'Delayed' };
             case 'transit': return { icon: Clock, color: 'text-[#2D2D2D]', bg: 'bg-muted/50', border: 'border-muted-foreground/20', label: 'In Transit' };
@@ -32,87 +37,152 @@ export const LogisticsTable = () => {
         }
     };
 
-    if (pallets.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center h-64 bg-[#F0F0F0]/50 backdrop-blur-sm rounded-[2rem] border border-[#D1D1D1]">
-                <div className="p-4 bg-white/50 rounded-2xl mb-4">
-                    <Package className="w-10 h-10 text-[#D1D1D1]" />
-                </div>
-                <p className="text-[#2D2D2D] font-medium">No pallets found.</p>
-                <p className="text-[#666666] text-sm">Try another query.</p>
-            </div>
-        );
-    }
-
-    return (
-        <div className="flex flex-col h-[400px] transition-all duration-500">
-            {/* Tabellen-Header */}
-            <div className="grid grid-cols-5 gap-4 px-8 py-3 border-b bg-muted/30 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                <div>ID</div>
-                <div>Destination</div>
-                <div>Status</div>
-                <div>Address</div>
-                <div className="text-right">Weight</div>
-            </div>
-
-            {/* Scroll-Container für Virtualization */}
-            <div ref={parentRef} className="flex-1 overflow-auto relative custom-scrollbar">
-                <div
-                    style={{
-                        height: `${rowVirtualizer.getTotalSize()}px`,
-                        width: '100%',
-                        position: 'relative',
-                    }}
+    const columns = useMemo<ColumnDef<SpatialPallet>[]>(() => [
+        {
+            accessorKey: 'id',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    className="-ml-3 h-8 px-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
                 >
-                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                        const pallet = pallets[virtualRow.index];
-                        const statusCfg = getStatusConfig(pallet.status);
-                        const StatusIcon = statusCfg.icon;
-
-                        const isHighlighted = !!activeHighlightColor;
-
-                        return (
-                            <div
-                                key={virtualRow.index}
-                                className="absolute top-0 left-0 w-full border-b border-[#D1D1D1]/10 hover:bg-white/30 transition-all duration-200 group"
-                                style={{
-                                    height: `${virtualRow.size}px`,
-                                    transform: `translateY(${virtualRow.start}px)`,
-                                    borderLeft: isHighlighted ? `4px solid ${activeHighlightColor}` : '4px solid transparent',
-                                }}
-                            >
-                                <div className="grid grid-cols-5 gap-4 px-8 items-center h-full text-xs">
-                                    <div className="font-mono text-[#2D2D2D] font-bold tracking-tight">{pallet.id}</div>
-
-                                    <div className="flex items-center gap-2 text-[#666666] font-medium">
-                                        {pallet.destination}
-                                    </div>
-
-                                    <div>
+                    ID
+                    <ArrowUpDown className="size-3.5" />
+                </Button>
+            ),
+            cell: ({ row }) => (
+                <div className="font-mono text-[#2D2D2D] font-bold tracking-tight">{row.original.id}</div>
+            ),
+        },
+        {
+            accessorKey: 'destination',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    className="-ml-3 h-8 px-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                >
+                    Destination
+                    <ArrowUpDown className="size-3.5" />
+                </Button>
+            ),
+            cell: ({ row }) => <div className="text-[#666666] font-medium">{row.original.destination}</div>,
+        },
+        {
+            accessorKey: 'status',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    className="-ml-3 h-8 px-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                >
+                    Status
+                    <ArrowUpDown className="size-3.5" />
+                </Button>
+            ),
+            cell: ({ row }) => {
+                const statusCfg = getStatusConfig(row.original.status);
+                const StatusIcon = statusCfg.icon;
+                return (
                     <span className={cn(
                         "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-sm",
                         statusCfg.bg,
                         statusCfg.color,
                         statusCfg.border
                     )}>
+                        <StatusIcon className="size-3" />
                         {statusCfg.label}
                     </span>
-                                    </div>
-
-                                    <div>
-                                        <div className="font-mono text-[#666666] text-[9px] bg-white/50 border border-[#D1D1D1]/50 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
-                                            {pallet.logicalAddress.id}
-                                        </div>
-                                    </div>
-
-                                    <div className="text-right text-[#2D2D2D] font-bold">
-                                        {pallet.weightKg} <span className="text-[9px] text-[#666666] font-normal">kg</span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                );
+            },
+        },
+        {
+            id: 'address',
+            header: () => <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-2">Address</div>,
+            cell: ({ row }) => (
+                <div className="font-mono text-[#666666] text-[9px] bg-white/50 border border-[#D1D1D1]/50 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                    {row.original.logicalAddress.id}
                 </div>
+            ),
+        },
+        {
+            accessorKey: 'weightKg',
+            header: ({ column }) => (
+                <div className="flex justify-end">
+                    <Button
+                        variant="ghost"
+                        className="-mr-3 h-8 px-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    >
+                        Weight
+                        <ArrowUpDown className="size-3.5" />
+                    </Button>
+                </div>
+            ),
+            cell: ({ row }) => (
+                <div className="text-right text-[#2D2D2D] font-bold">
+                    {row.original.weightKg} <span className="text-[9px] text-[#666666] font-normal">kg</span>
+                </div>
+            ),
+        },
+    ], []);
+
+    const table = useReactTable({
+        data: pallets,
+        columns,
+        state: { sorting },
+        onSortingChange: setSorting,
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+    });
+
+    return (
+        <div className="flex h-full min-h-0 flex-col transition-all duration-500">
+            <div className="flex-1 min-h-0 overflow-auto relative custom-scrollbar">
+                <Table>
+                    <TableHeader className="sticky top-0 z-20 bg-muted/30 backdrop-blur-sm">
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                                {headerGroup.headers.map((header) => (
+                                    <TableHead key={header.id} className="px-8 first:pl-8 last:pr-8">
+                                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                    </TableHead>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
+                    <TableBody>
+                        {table.getRowModel().rows.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    key={row.id}
+                                    className="h-[72px] border-[#D1D1D1]/10 hover:bg-white/30"
+                                    style={{
+                                        boxShadow: activeHighlightColor ? `inset 4px 0 0 ${activeHighlightColor}` : undefined,
+                                    }}
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell key={cell.id} className="px-8 first:pl-8 last:pr-8 text-xs">
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} className="h-40 text-center">
+                                    <div className="flex flex-col items-center justify-center">
+                                        <div className="p-4 bg-white/50 rounded-2xl mb-4">
+                                            <Package className="w-10 h-10 text-[#D1D1D1]" />
+                                        </div>
+                                        <p className="text-[#2D2D2D] font-medium">No pallets found.</p>
+                                        <p className="text-[#666666] text-sm">Try another query.</p>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </div>
         </div>
     );
