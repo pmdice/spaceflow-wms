@@ -53,28 +53,28 @@ export const MagicSearchbar = () => {
     };
 
     return (
-        <div className="w-full">
+        <div className="w-full group">
             <form
                 onSubmit={handleSubmit}
                 className={cn(
-                    "relative flex items-center w-full transition-all duration-300 ease-in-out",
-                    "bg-transparent rounded-xl overflow-hidden",
-                    isFiltered ? "ring-2 ring-primary/20" : ""
+                    "relative flex items-center w-full transition-all duration-500 ease-in-out",
+                    "bg-gray-100/50 hover:bg-white focus-within:bg-white rounded-2xl overflow-hidden border border-transparent focus-within:border-[#BC804C]/30 focus-within:shadow-[0_0_20px_rgba(188,128,76,0.1)] shadow-inner",
+                    isFiltered ? "ring-2 ring-[#BC804C]/20 border-[#BC804C]/30" : ""
                 )}
             >
                 <div className={cn(
-                    "pl-4 pr-2 transition-colors duration-300",
-                    isSearching ? "text-primary" : "text-muted-foreground"
+                    "pl-5 pr-2 transition-all duration-300",
+                    isSearching ? "text-[#BC804C]" : "text-muted-foreground group-hover:text-gray-900"
                 )}>
-                    <Sparkles className={cn("size-4", isSearching && "animate-pulse")} />
+                    <Sparkles className={cn("size-5", isSearching && "animate-pulse")} />
                 </div>
 
                 <input
                     type="text"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Ask AI Search..."
-                    className="w-full py-3 pr-12 text-sm bg-transparent outline-none placeholder:text-muted-foreground/50 font-medium"
+                    placeholder="Search inventory with AI... (e.g. 'show all delayed in Basel')"
+                    className="w-full py-4 pr-12 text-sm bg-transparent outline-none placeholder:text-muted-foreground/50 font-medium"
                     disabled={isSearching}
                 />
 

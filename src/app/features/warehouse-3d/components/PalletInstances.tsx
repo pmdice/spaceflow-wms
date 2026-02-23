@@ -7,7 +7,7 @@ import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { calculate3DPosition } from '@/lib/warehouse-math';
 import { WAREHOUSE_CONFIG } from '@/lib/constants';
 
-const BaseColor = new THREE.Color("#cbd5e1"); // Helles Grau für normale Paletten
+const BaseColor = new THREE.Color("#64748b"); // Deutlich sichtbarer Slate-Ton auf hellem Canvas
 
 export const PalletInstances = () => {
     // 1. Wir holen ALLE Daten und die gefilterten Daten aus dem Store

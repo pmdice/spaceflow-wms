@@ -7,32 +7,25 @@ import { LogisticsTable } from '@/app/features/logistics-table/components/Logist
 import { WarehouseScene } from '@/app/features/warehouse-3d/components/WarehouseScene';
 import {
     Box,
-    Settings,
-    Bell,
-    Map as MapIcon,
-    Zap,
     Activity,
-    ChevronDown,
-    Maximize,
     Minimize,
     MousePointer2,
-    PackageCheck
+    PackageCheck,
 } from 'lucide-react';
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
-    CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge"; // Ensure this is installed via shadcn
+import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
     const fetchData = useLogisticsStore((state) => state.fetchData);
-    const isLoading = useLogisticsStore((state) => state.isLoading);
     const error = useLogisticsStore((state) => state.error);
 
     const pallets = useLogisticsStore((state) => state.filteredPallets);
@@ -82,9 +75,12 @@ export default function DashboardPage() {
             <div className="relative z-10 flex flex-col h-full overflow-hidden pointer-events-none">
 
                 {/* --- HEADER (Edge to Edge) --- */}
-                <header className="flex h-16 shrink-0 items-center justify-between px-6 pointer-events-auto bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm z-20 transition-transform duration-500">
+                <header className={cn(
+                    "flex h-16 shrink-0 items-center justify-between px-6 pointer-events-auto bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm z-20 transition-all duration-500",
+                    is3DInteractive ? "translate-y-[-100%] opacity-0" : "translate-y-0 opacity-100"
+                )}>
                     <div className="flex items-center gap-4">
-                        <SidebarTrigger className="-ml-2 bg-white/60 hover:bg-white border-white/50" />
+                        <SidebarTrigger className="-ml-2 bg-white/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border-white/50" />
                         <Separator orientation="vertical" className="h-4 bg-gray-300" />
                         <div className="flex items-center gap-2">
                             <Box className="size-5 text-[#BC804C]" />
@@ -94,54 +90,50 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <div className="hidden md:flex bg-gray-100/50 p-1 rounded-lg border border-white shadow-inner">
-                            <Tab label="Dashboard" active />
-                            <Tab label="Map View" icon={MapIcon} />
-                        </div>
-                        <Separator orientation="vertical" className="h-4 bg-gray-300 hidden md:block" />
-                        <HeaderAction icon={Bell} badge={delayedCount > 0} />
-                        <HeaderAction icon={Settings} />
-                        <div className="size-8 rounded-full overflow-hidden border-2 border-white shadow-sm ml-2 bg-white cursor-pointer hover:scale-105 transition-transform">
-                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Patrick" alt="Operator" />
-                        </div>
+                    <div className="flex items-center gap-2">
+                        <HeaderKPIChip
+                            label="Active Volume"
+                            value={`${filteredCount} / ${totalPallets}`}
+                            icon={PackageCheck}
+                        />
+                        <HeaderKPIChip
+                            label="Delayed"
+                            value={delayedCount}
+                            icon={Activity}
+                            alert={delayedCount > 0}
+                        />
                     </div>
                 </header>
 
-                {/* --- FLOATING CONTROLS & KPIs --- */}
+                {/* --- FLOATING CONTROLS --- */}
                 <div className={cn(
-                    "flex-1 p-6 flex flex-col justify-between transition-all duration-500 ease-in-out",
+                    "flex-1 p-6 flex flex-col justify-end transition-all duration-500 ease-in-out",
                     is3DInteractive ? "opacity-0 translate-y-[-20px]" : "opacity-100 translate-y-0"
                 )}>
-                    {/* Top Floating KPIs */}
-                    <div className="flex gap-4 pointer-events-auto">
-                        <FloatingKPI title="Active Volume" value={`${filteredCount} / ${totalPallets}`} icon={PackageCheck} />
-                        <FloatingKPI title="Delayed" value={delayedCount} icon={Activity} alert={delayedCount > 0} />
-                    </div>
-
-                    {/* 3D Interaction Trigger */}
-                    <div className="self-center mb-8 pointer-events-auto">
-                        <button
+                    {/* INTERACT 3D BUTTON (Redesigned with Ghost style) */}
+                    <div className="flex justify-center mb-8 pointer-events-auto">
+                        <Button
+                            variant="ghost"
                             onClick={() => setIs3DInteractive(true)}
-                            className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-xl border border-white/50 text-sm font-semibold text-gray-800 hover:scale-105 hover:bg-white transition-all group"
+                            className="group"
                         >
-                            <MousePointer2 className="size-4 text-[#BC804C] group-hover:rotate-12 transition-transform" />
+                            <MousePointer2 className="transition-transform duration-200 group-hover:-translate-x-0.5" />
                             Interact with 3D Model
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
-                {/* --- EXIT 3D MODE BUTTON (Only visible when interactive) --- */}
+    {/* --- EXIT 3D MODE BUTTON (Only visible when interactive) --- */}
                 <div className={cn(
-                    "absolute top-24 left-1/2 -translate-x-1/2 pointer-events-auto transition-all duration-500 ease-in-out",
-                    is3DInteractive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-[-20px] pointer-events-none"
+                    "absolute top-8 left-1/2 -translate-x-1/2 pointer-events-auto transition-all duration-500 ease-in-out z-30",
+                    is3DInteractive ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-[-20px] scale-95 pointer-events-none"
                 )}>
                     <button
                         onClick={() => setIs3DInteractive(false)}
-                        className="flex items-center gap-2 bg-gray-900/90 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl text-sm font-semibold text-white hover:bg-gray-900 hover:scale-105 transition-all"
+                        className="flex items-center gap-2.5 bg-gray-900/90 hover:bg-gray-900 backdrop-blur-md px-5 py-2.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] text-xs font-bold text-white hover:scale-105 active:scale-95 transition-all border border-white/10"
                     >
-                        <Minimize className="size-4" />
-                        Exit 3D Mode
+                        <Minimize className="size-3.5" />
+                        Exit 3D Model
                     </button>
                 </div>
 
@@ -153,30 +145,42 @@ export default function DashboardPage() {
                 )}>
                     <Card className="bg-white/90 backdrop-blur-2xl border-t border-white/60 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] rounded-none h-[45vh] flex flex-col">
 
-                        {/* Panel Header: Contains Title & AI Search */}
-                        <CardHeader className="border-b bg-white/50 py-4 px-6 flex flex-row items-center justify-between sticky top-0 z-20">
+                        {/* Panel Header: Optimised & Modernized */}
+                        <CardHeader className="border-b bg-white/40 backdrop-blur-md py-6 px-8 flex flex-col md:flex-row items-center justify-between gap-6 sticky top-0 z-20">
 
                             {/* Left: Titles & Tags */}
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-1.5 min-w-[200px]">
                                 <div className="flex items-center gap-3">
-                                    <CardTitle className="text-xl">Inventory Roster</CardTitle>
-                                    <Badge variant="secondary" className="bg-[#BC804C]/10 text-[#BC804C] hover:bg-[#BC804C]/20 border-none">
-                                        AI Filter Active
-                                    </Badge>
+                                    <CardTitle className="text-xl font-bold tracking-tight">Inventory Roster</CardTitle>
+                                    {filteredCount < totalPallets && (
+                                        <Badge variant="secondary" className="bg-[#BC804C]/10 text-[#BC804C] hover:bg-[#BC804C]/20 border-none animate-in fade-in zoom-in duration-300">
+                                            AI Filter Active
+                                        </Badge>
+                                    )}
                                 </div>
-                                <div className="flex gap-2">
-                                    <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
-                                        Transit: {transitCount}
-                                    </Badge>
-                                    <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
-                                        Delayed: {delayedCount}
-                                    </Badge>
+                                <div className="flex gap-3">
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="size-1.5 rounded-full bg-blue-500" />
+                                        <span className="text-xs font-medium text-muted-foreground">Transit: {transitCount}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="size-1.5 rounded-full bg-[#BC804C]" />
+                                        <span className="text-xs font-medium text-muted-foreground">Delayed: {delayedCount}</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Right: The Magic Searchbar moved here! */}
-                            <div className="w-[450px]">
+                            {/* Center: The Magic Searchbar - Now Centered and Modernized! */}
+                            <div className="flex-1 max-w-xl w-full">
                                 <MagicSearchbar />
+                            </div>
+
+                            {/* Right: Action Buttons / Stats (Balance) */}
+                            <div className="hidden lg:flex items-center gap-2 min-w-[200px] justify-end">
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Pallets</p>
+                                    <p className="text-sm font-bold text-gray-900">{filteredCount} <span className="text-gray-400 font-normal">showing</span></p>
+                                </div>
                             </div>
 
                         </CardHeader>
@@ -195,43 +199,19 @@ export default function DashboardPage() {
     );
 }
 
-// --- Micro-Components ---
-
-function Tab({ label, icon: Icon, active = false }: { label: string, icon?: any, active?: boolean }) {
+function HeaderKPIChip({ label, value, icon: Icon, alert = false }: { label: string, value: string | number, icon: any, alert?: boolean }) {
     return (
-        <button className={cn(
-            "px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
-            active ? "bg-white text-gray-900 shadow-sm border border-gray-200/50" : "text-gray-500 hover:text-gray-900"
+        <div className={cn(
+            "flex items-center gap-2 rounded-xl border px-3 py-2 backdrop-blur-md",
+            "shadow-[0_2px_8px_rgba(15,23,42,0.06)]",
+            alert ? "bg-red-50/90 border-red-200/80" : "bg-white/80 border-slate-200/80"
         )}>
-            {Icon && <Icon className="size-4" />}
-            {label}
-        </button>
-    );
-}
-
-function HeaderAction({ icon: Icon, badge = false }: { icon: any, badge?: boolean }) {
-    return (
-        <button className="p-2 bg-transparent rounded-lg hover:bg-gray-100 transition-colors relative group">
-            <Icon className="size-5 text-gray-500 group-hover:text-gray-900 transition-colors" />
-            {badge && (
-                <span className="absolute top-1 right-1 size-2.5 bg-red-500 rounded-full border-2 border-white" />
-            )}
-        </button>
-    );
-}
-
-function FloatingKPI({ title, value, icon: Icon, alert = false }: { title: string, value: string | number, icon: any, alert?: boolean }) {
-    return (
-        <div className="bg-white/80 backdrop-blur-xl border border-white/60 shadow-lg rounded-2xl p-4 flex items-center gap-4 min-w-[200px]">
-            <div className={cn(
-                "p-3 rounded-xl",
-                alert ? "bg-red-100 text-red-600" : "bg-[#BC804C]/10 text-[#BC804C]"
-            )}>
-                <Icon className="size-5" />
-            </div>
-            <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
-                <p className={cn("text-2xl font-bold", alert ? "text-red-600" : "text-gray-900")}>{value}</p>
+            <Icon className={cn("size-3.5", alert ? "text-red-600" : "text-[#BC804C]")} />
+            <div className="flex items-baseline gap-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{label}</span>
+                <span className={cn("text-sm font-semibold leading-none", alert ? "text-red-600" : "text-slate-900")}>
+                    {value}
+                </span>
             </div>
         </div>
     );

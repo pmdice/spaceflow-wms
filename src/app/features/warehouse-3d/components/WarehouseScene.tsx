@@ -6,12 +6,12 @@ import { PalletInstances } from './PalletInstances';
 
 export const WarehouseScene = () => {
     return (
-        <div className="h-full w-full rounded-2xl overflow-hidden bg-slate-950">
+        <div className="h-full w-full rounded-2xl overflow-hidden bg-slate-200">
             <Canvas camera={{ position: [30, 25, 30], fov: 50 }}>
                 {/* 1. Atmosphäre & Licht */}
-                <color attach="background" args={['#0f172a']} /> {/* Dunkler Hintergrund */}
-                <ambientLight intensity={0.4} />
-                <directionalLight position={[10, 20, 15]} intensity={1} castShadow />
+                <color attach="background" args={['#e2e8f0']} />
+                <ambientLight intensity={0.7} />
+                <directionalLight position={[10, 20, 15]} intensity={0.9} castShadow />
                 {/* Environment sorgt für realistische Reflexionen */}
                 <Environment preset="city" />
 
@@ -21,10 +21,10 @@ export const WarehouseScene = () => {
                     args={[100, 100]} // Größe
                     cellSize={4}
                     cellThickness={1}
-                    cellColor="#334155"
+                    cellColor="#94a3b8"
                     sectionSize={20}
                     sectionThickness={1.5}
-                    sectionColor="#475569"
+                    sectionColor="#64748b"
                     fadeDistance={60}
                 />
 
