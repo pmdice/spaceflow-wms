@@ -35,6 +35,9 @@ export default function DashboardPage() {
     const pallets = useLogisticsStore((state) => state.filteredPallets);
     const filteredCount = pallets.length;
 
+    // --- NEW: 3D Interaction State ---
+    const [is3DInteractive, setIs3DInteractive] = useState(false);
+
     useEffect(() => {
         fetchData();
     }, [fetchData]);
@@ -60,8 +63,12 @@ export default function DashboardPage() {
         // Root Container
         <div className="relative w-full h-screen overflow-hidden bg-[#E5E5E5] text-[#2D2D2D] font-sans">
 
-            {/* 1. LAYER: 3D BACKGROUND (Fixed in background) */}
-            <div className="absolute inset-0 z-0">
+            {/* --- 1. LAYER: 3D BACKGROUND --- */}
+            {/* We control pointer-events based on the is3DInteractive state */}
+            <div className={cn(
+                "absolute inset-0 z-0 transition-opacity duration-700 ease-in-out",
+                is3DInteractive ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-80"
+            )}>
                 <WarehouseScene />
             </div>
 
@@ -121,139 +128,43 @@ export default function DashboardPage() {
                         </div>
                     </header>
 
-                    {/* Subheader */}
-                    <div className="flex items-center justify-between mb-8 pointer-events-auto">
-                        <div className="flex items-center gap-4">
-                            <button className="p-2 bg-white/60 hover:bg-white backdrop-blur-md rounded-xl shadow-sm transition-colors border border-white/50">
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <h2 className="text-4xl font-light text-gray-900 drop-shadow-sm">Logistics Flow</h2>
-                        </div>
-
-                        <div className="flex items-center gap-6 text-sm text-[#666666] bg-white/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/50 shadow-sm">
-                            <BreadcrumbItem label="Zone" value="Terminal A" />
-                            <BreadcrumbItem label="Location" value="Zürich" />
-                            <BreadcrumbItem label="Data range" value="This week" />
-                        </div>
+                {/* --- FLOATING CONTROLS & KPIs --- */}
+                <div className={cn(
+                    "flex-1 p-6 flex flex-col justify-between transition-all duration-500 ease-in-out",
+                    is3DInteractive ? "opacity-0 translate-y-[-20px]" : "opacity-100 translate-y-0"
+                )}>
+                    {/* Top Floating KPIs */}
+                    <div className="flex gap-4 pointer-events-auto">
+                        <FloatingKPI title="Active Volume" value={`${filteredCount} / ${totalPallets}`} icon={PackageCheck} />
+                        <FloatingKPI title="Delayed" value={delayedCount} icon={Activity} alert={delayedCount > 0} />
                     </div>
 
-                    {/* Floating Grid Layout */}
-                    <div className="flex-1 flex flex-col lg:flex-row gap-6">
-
-                        {/* LEFT COLUMN */}
-                        <div className="w-full lg:w-[320px] flex flex-col gap-6 pointer-events-auto shrink-0">
-                            {/* Magic Searchbar (Elegant in die linke Spalte integriert) */}
-                            <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-2 border border-white/60 shadow-lg">
-                                <MagicSearchbar />
-                            </div>
-
-                            <MetricCard
-                                title="Total Pallets"
-                                value={filteredCount.toString()}
-                                icon={Package}
-                                slider={true}
-                            />
-                            <MetricCard
-                                title="Delayed Shipments"
-                                value={pallets.filter(p => p.status === 'delayed').length.toString()}
-                                icon={Activity}
-                                slider={true}
-                            />
-                        </div>
-
-                        {/* CENTER COLUMN (Empty Space for 3D Viewer) */}
-                        <div className="flex-1 flex flex-col justify-end gap-6 pointer-events-none min-h-[400px]">
-                            {/* Hier ist der 3D Hintergrund sichtbar! Wir platzieren nur die breiten Karten unten */}
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pointer-events-auto mt-auto">
-                                <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg flex flex-col">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-2">
-                                            <Activity className="w-4 h-4" />
-                                            <span className="text-sm font-medium">Terminal Occupancy</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center justify-between flex-1">
-                                        <div className="relative w-28 h-28 flex items-center justify-center">
-                                            <svg className="w-full h-full -rotate-90">
-                                                <circle cx="56" cy="56" r="48" fill="none" stroke="#E5E5E5" strokeWidth="8" />
-                                                <circle cx="56" cy="56" r="48" fill="none" stroke="#BC804C" strokeWidth="8" strokeDasharray="300" strokeDashoffset="80" strokeLinecap="round" />
-                                            </svg>
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                <span className="text-2xl font-bold">85%</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col gap-2 text-right">
-                                            <div className="text-xs text-[#666666]">In Transit: <span className="font-bold text-gray-900 ml-2">{pallets.filter(p => p.status === 'transit').length}</span></div>
-                                            <div className="text-xs text-[#666666]">Stored: <span className="font-bold text-gray-900 ml-2">{pallets.filter(p => p.status === 'stored').length}</span></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-2">
-                                            <Zap className="w-4 h-4" />
-                                            <span className="text-sm font-medium">AI Analysis</span>
-                                        </div>
-                                    </div>
-                                    <div className="text-center mt-4">
-                                        <p className="text-3xl font-bold text-[#BC804C]">+12%</p>
-                                        <p className="text-[11px] text-[#666666] mt-1">Efficiency increase expected based on current AI routing.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* RIGHT COLUMN */}
-                        <div className="w-full lg:w-[320px] flex flex-col gap-6 pointer-events-auto shrink-0">
-                            <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-2">
-                                        <User className="w-4 h-4" />
-                                        <span className="text-sm font-medium">Active Operators</span>
-                                    </div>
-                                    <ArrowUpRight className="w-4 h-4 text-[#666666]" />
-                                </div>
-                                <div className="text-5xl font-light mb-8 text-center">24</div>
-                                <div className="flex items-center gap-1 justify-center h-8">
-                                    {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
-                                        <div key={i} className="w-2 bg-[#BC804C]/20 rounded-full relative">
-                                            <div className="absolute bottom-0 left-0 right-0 bg-[#BC804C] rounded-full" style={{ height: `${h}%` }}></div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Details Card */}
-                            <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <Grid className="w-4 h-4" />
-                                        <span className="text-sm font-medium">Selected Zone</span>
-                                    </div>
-                                    <Maximize2 className="w-4 h-4 text-[#666666]" />
-                                </div>
-                                <div className="aspect-video bg-gray-900/5 rounded-2xl mb-4 flex items-center justify-center border border-white">
-                                    <Box className="w-12 h-12 text-[#BC804C]/40" />
-                                </div>
-                                <p className="text-[11px] text-[#666666] leading-relaxed mb-4">
-                                    High-throughput staging area. AI suggests moving delayed items to sector B.
-                                </p>
-                                <button className="w-full py-2.5 bg-[#BC804C] text-white rounded-xl text-sm font-medium shadow-md shadow-[#BC804C]/20 hover:bg-[#a66d3e] transition-colors">
-                                    Optimize Route
-                                </button>
-                            </div>
-                        </div>
-
+                    {/* 3D Interaction Trigger */}
+                    <div className="self-center mb-8 pointer-events-auto">
+                        <button
+                            onClick={() => setIs3DInteractive(true)}
+                            className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-xl border border-white/50 text-sm font-semibold text-gray-800 hover:scale-105 hover:bg-white transition-all group"
+                        >
+                            <MousePointer2 className="size-4 text-[#BC804C] group-hover:rotate-12 transition-transform" />
+                            Interact with 3D Model
+                        </button>
                     </div>
+                </div>
 
-                    {/* Bottom Table - Scrolls up over the 3D view */}
-                    <div className="mt-6 pointer-events-auto pb-10">
-                        <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
-                            <h3 className="text-xl font-medium mb-6">Inventory Database</h3>
-                            <LogisticsTable />
-                        </div>
-                    </div>
+                {/* --- EXIT 3D MODE BUTTON (Only visible when interactive) --- */}
+                <div className={cn(
+                    "absolute top-24 left-1/2 -translate-x-1/2 pointer-events-auto transition-all duration-500 ease-in-out",
+                    is3DInteractive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-[-20px] pointer-events-none"
+                )}>
+                    <button
+                        onClick={() => setIs3DInteractive(false)}
+                        className="flex items-center gap-2 bg-gray-900/90 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl text-sm font-semibold text-white hover:bg-gray-900 hover:scale-105 transition-all"
+                    >
+                        <Minimize className="size-4" />
+                        Exit 3D Mode
+                    </button>
+                </div>
+
 
                 </main>
             </div>
