@@ -58,7 +58,10 @@ export const MagicSearchbar = () => {
                 onSubmit={handleSubmit}
                 className={cn(
                     "relative flex items-center w-full transition-all duration-500 ease-in-out",
-                    "bg-gray-100/50 hover:bg-white focus-within:bg-white rounded-2xl overflow-hidden border border-transparent focus-within:border-[#BC804C]/30 focus-within:shadow-[0_0_20px_rgba(188,128,76,0.1)] shadow-inner",
+                    "rounded-2xl overflow-hidden border border-white/35",
+                    "backdrop-blur-2xl supports-[backdrop-filter]:bg-white/25 bg-white/70",
+                    "hover:supports-[backdrop-filter]:bg-white/35 focus-within:supports-[backdrop-filter]:bg-white/40",
+                    "focus-within:border-[#BC804C]/30 focus-within:shadow-[0_0_20px_rgba(188,128,76,0.12)]",
                     isFiltered ? "ring-2 ring-[#BC804C]/20 border-[#BC804C]/30" : ""
                 )}
             >

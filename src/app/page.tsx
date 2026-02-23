@@ -159,6 +159,17 @@ export default function DashboardPage() {
                     </button>
                 </div>
 
+                {/* Floating searchbar in overlay layer for reliable backdrop blur */}
+                <div
+                    className={cn(
+                        "absolute left-1/2 z-30 w-full max-w-xl -translate-x-1/2 -translate-y-[calc(100%+0.75rem)] px-4 md:px-0 pointer-events-auto transition-all duration-500 ease-in-out",
+                        is3DInteractive ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100"
+                    )}
+                    style={{ top: isListExpanded ? "4rem" : `${100 - BASE_LIST_PANEL_HEIGHT_DVH}dvh` }}
+                >
+                    <MagicSearchbar />
+                </div>
+
                 {/* Spacer keeps bottom panel docked while controls float above canvas */}
                 <div className="flex-1" />
 
@@ -170,10 +181,6 @@ export default function DashboardPage() {
                 )}
                 style={{ height: isListExpanded ? "calc(100dvh - 4rem)" : `${BASE_LIST_PANEL_HEIGHT_DVH}dvh` }}>
                     <Card className="bg-white/90 backdrop-blur-2xl border-t border-white/60 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] rounded-none h-full flex flex-col py-0 gap-0">
-                        <div className="absolute left-1/2 top-0 z-30 w-full max-w-xl -translate-x-1/2 -translate-y-full px-4 md:px-0 pointer-events-auto">
-                            <MagicSearchbar />
-                        </div>
-
                         {/* Panel Body: The Virtualized Table */}
                         <CardContent className="p-0 overflow-hidden flex-1 relative">
                             {/* Gradient mask for smooth scroll appearance */}
