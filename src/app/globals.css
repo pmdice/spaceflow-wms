@@ -48,38 +48,38 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --radius: 1rem;
+  --background: #E5E5E5;
+  --foreground: #2D2D2D;
+  --card: #F0F0F0;
+  --card-foreground: #2D2D2D;
+  --popover: #F0F0F0;
+  --popover-foreground: #2D2D2D;
+  --primary: #BC804C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #D1D1D1;
+  --secondary-foreground: #2D2D2D;
+  --muted: #D1D1D1;
+  --muted-foreground: #666666;
+  --accent: #BC804C;
+  --accent-foreground: #FFFFFF;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: #D1D1D1;
+  --input: #D1D1D1;
+  --ring: #BC804C;
+  --chart-1: #BC804C;
+  --chart-2: #8B5E34;
+  --chart-3: #5C4033;
+  --chart-4: #D2B48C;
+  --chart-5: #EADDCA;
+  --sidebar: #E5E5E5;
+  --sidebar-foreground: #2D2D2D;
+  --sidebar-primary: #BC804C;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #D1D1D1;
+  --sidebar-accent-foreground: #2D2D2D;
+  --sidebar-border: #D1D1D1;
+  --sidebar-ring: #BC804C;
 }
 
 .dark {
@@ -122,5 +122,18 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
   }
 }
