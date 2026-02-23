@@ -27,6 +27,8 @@ import {
 export const LogisticsTable = () => {
     const pallets = useLogisticsStore((state) => state.filteredPallets);
     const activeHighlightColor = useLogisticsStore((state) => state.activeHighlightColor);
+    const hoveredPalletId = useLogisticsStore((state) => state.hoveredPalletId);
+    const setHoveredPalletId = useLogisticsStore((state) => state.setHoveredPalletId);
     const [sorting, setSorting] = useState<SortingState>([]);
     const parentRef = useRef<HTMLDivElement>(null);
 
@@ -179,7 +181,12 @@ export const LogisticsTable = () => {
                                     return (
                                 <TableRow
                                     key={row.id}
-                                    className="h-[72px] border-[#D1D1D1]/10 hover:bg-white/30"
+                                    className={cn(
+                                        "h-[72px] border-[#D1D1D1]/10 hover:bg-white/30",
+                                        hoveredPalletId === row.original.id && "bg-blue-50/80"
+                                    )}
+                                    onMouseEnter={() => setHoveredPalletId(row.original.id)}
+                                    onMouseLeave={() => setHoveredPalletId(null)}
                                     style={{
                                         boxShadow: activeHighlightColor ? `inset 4px 0 0 ${activeHighlightColor}` : undefined,
                                     }}

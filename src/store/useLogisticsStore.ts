@@ -10,11 +10,13 @@ interface LogisticsState {
 
     // Aktive AI-Filter Settings (z.B. um im 3D Raum Dinge rot leuchten zu lassen)
     activeHighlightColor: string | null;
+    hoveredPalletId: string | null;
 
     // Actions
     fetchData: () => Promise<void>;
     applyAIFilter: (filter: LogisticsFilter) => void;
     resetFilter: () => void;
+    setHoveredPalletId: (id: string | null) => void;
 }
 
 export const useLogisticsStore = create<LogisticsState>((set, get) => ({
@@ -23,6 +25,7 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
     isLoading: false,
     error: null,
     activeHighlightColor: null,
+    hoveredPalletId: null,
 
     // 1. Initiales Laden der Mock-Daten
     fetchData: async () => {
@@ -67,7 +70,8 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
         // Update den Store mit den neuen Resultaten und der Highlight-Farbe
         set({
             filteredPallets: result,
-            activeHighlightColor: filter.highlightColor || null
+            activeHighlightColor: filter.highlightColor || null,
+            hoveredPalletId: null,
         });
     },
 
@@ -75,7 +79,10 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
     resetFilter: () => {
         set({
             filteredPallets: get().pallets,
-            activeHighlightColor: null
+            activeHighlightColor: null,
+            hoveredPalletId: null,
         });
-    }
+    },
+
+    setHoveredPalletId: (id) => set({ hoveredPalletId: id }),
 }));
