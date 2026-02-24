@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Grid } from '@react-three/drei';
 import { PalletInstances } from './PalletInstances';
@@ -16,6 +17,24 @@ type HoverInfo = {
 export const WarehouseScene = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
+
+    useEffect(() => {
+        const originalWarn = console.warn;
+        console.warn = (...args: unknown[]) => {
+            const firstArg = typeof args[0] === 'string' ? args[0] : '';
+            if (
+                firstArg.includes('THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.') ||
+                firstArg.includes('THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.')
+            ) {
+                return;
+            }
+            originalWarn(...args);
+        };
+
+        return () => {
+            console.warn = originalWarn;
+        };
+    }, []);
 
     const handleHoverInfoChange = useCallback((payload: { pallet: SpatialPallet; clientX: number; clientY: number } | null) => {
         if (!payload || !containerRef.current) {
@@ -40,7 +59,10 @@ export const WarehouseScene = () => {
 
     return (
         <div ref={containerRef} className="relative h-full w-full">
-            <Canvas camera={{ position: [20, 20, 20], fov: 50 }} shadows>
+            <Canvas
+                camera={{ position: [20, 20, 20], fov: 50 }}
+                shadows={{ type: THREE.PCFShadowMap }}
+            >
                 {/* Light, clean backdrop inspired by reference */}
                 <color attach="background" args={['#eef2f8']} />
                 <fog attach="fog" args={['#f0f2f5', 30, 100]} />
