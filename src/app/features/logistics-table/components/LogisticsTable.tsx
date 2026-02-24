@@ -29,6 +29,8 @@ export const LogisticsTable = () => {
     const activeHighlightColor = useLogisticsStore((state) => state.activeHighlightColor);
     const hoveredPalletId = useLogisticsStore((state) => state.hoveredPalletId);
     const setHoveredPalletId = useLogisticsStore((state) => state.setHoveredPalletId);
+    const selectedPalletId = useLogisticsStore((state) => state.selectedPalletId);
+    const setSelectedPalletId = useLogisticsStore((state) => state.setSelectedPalletId);
     const [sorting, setSorting] = useState<SortingState>([]);
     const parentRef = useRef<HTMLDivElement>(null);
 
@@ -182,13 +184,18 @@ export const LogisticsTable = () => {
                                 <TableRow
                                     key={row.id}
                                     className={cn(
-                                        "h-[72px] border-[#D1D1D1]/10 hover:bg-white/30",
+                                        "h-[72px] border-[#D1D1D1]/10 hover:bg-white/30 cursor-pointer",
                                         hoveredPalletId === row.original.id && "bg-blue-50/80"
                                     )}
                                     onMouseEnter={() => setHoveredPalletId(row.original.id)}
                                     onMouseLeave={() => setHoveredPalletId(null)}
+                                    onClick={() => setSelectedPalletId(row.original.id)}
                                     style={{
-                                        boxShadow: activeHighlightColor ? `inset 4px 0 0 ${activeHighlightColor}` : undefined,
+                                        boxShadow: selectedPalletId === row.original.id
+                                            ? 'inset 4px 0 0 #f97316'
+                                            : activeHighlightColor
+                                                ? `inset 4px 0 0 ${activeHighlightColor}`
+                                                : undefined,
                                     }}
                                 >
                                     {row.getVisibleCells().map((cell) => (

@@ -5,6 +5,7 @@ import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { MagicSearchbar } from '@/app/features/ai-search/components/MagicSearchbar';
 import { LogisticsTable } from '@/app/features/logistics-table/components/LogisticsTable';
 import { WarehouseScene } from '@/app/features/warehouse-3d/components/WarehouseScene';
+import { ParcelDetailPanel } from '@/app/features/parcel-detail/components/ParcelDetailPanel';
 import {
     Box,
     Activity,
@@ -28,10 +29,14 @@ export default function DashboardPage() {
     const error = useLogisticsStore((state) => state.error);
 
     const pallets = useLogisticsStore((state) => state.filteredPallets);
+    const allPallets = useLogisticsStore((state) => state.pallets);
     const totalPallets = useLogisticsStore((state) => state.pallets.length);
     const filteredCount = pallets.length;
+    const selectedPalletId = useLogisticsStore((state) => state.selectedPalletId);
+    const setSelectedPalletId = useLogisticsStore((state) => state.setSelectedPalletId);
 
     const delayedCount = pallets.filter(p => p.status === 'delayed').length;
+    const selectedPallet = allPallets.find((p) => p.id === selectedPalletId) ?? null;
 
     // --- View State ---
     const [is3DInteractive, setIs3DInteractive] = useState(false);
@@ -169,6 +174,11 @@ export default function DashboardPage() {
                 >
                     <MagicSearchbar />
                 </div>
+
+                <ParcelDetailPanel
+                    pallet={selectedPallet}
+                    onClose={() => setSelectedPalletId(null)}
+                />
 
                 {/* Spacer keeps bottom panel docked while controls float above canvas */}
                 <div className="flex-1" />

@@ -10,6 +10,7 @@ import type { SpatialPallet } from '@/types/wms';
 
 const BaseColor = new THREE.Color("#90a4bf");
 const HoverColor = new THREE.Color("#1d4ed8");
+const SelectedColor = new THREE.Color("#f97316");
 
 type PalletInstancesProps = {
     onHoverInfoChange?: (payload: { pallet: SpatialPallet; clientX: number; clientY: number } | null) => void;
@@ -21,6 +22,8 @@ export const PalletInstances = ({ onHoverInfoChange }: PalletInstancesProps) => 
     const highlightColorHex = useLogisticsStore((state) => state.activeHighlightColor);
     const hoveredPalletId = useLogisticsStore((state) => state.hoveredPalletId);
     const setHoveredPalletId = useLogisticsStore((state) => state.setHoveredPalletId);
+    const selectedPalletId = useLogisticsStore((state) => state.selectedPalletId);
+    const setSelectedPalletId = useLogisticsStore((state) => state.setSelectedPalletId);
     const isFilterActive = allPallets.length !== filteredPallets.length;
 
     const meshRef = useRef<THREE.InstancedMesh>(null);
@@ -46,7 +49,9 @@ export const PalletInstances = ({ onHoverInfoChange }: PalletInstancesProps) => 
             meshRef.current!.setMatrixAt(index, dummyMatrix.matrix);
 
             // B) Farbe bestimmen
-            if (hoveredPalletId === pallet.id) {
+            if (selectedPalletId === pallet.id) {
+                meshRef.current!.setColorAt(index, SelectedColor);
+            } else if (hoveredPalletId === pallet.id) {
                 meshRef.current!.setColorAt(index, HoverColor);
             } else if (isFilterActive && highlightColorHex) {
                 highlightColor.set(highlightColorHex);
@@ -62,7 +67,7 @@ export const PalletInstances = ({ onHoverInfoChange }: PalletInstancesProps) => 
         meshRef.current.instanceMatrix.needsUpdate = true;
         if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
 
-    }, [filteredPallets, hoveredPalletId, isFilterActive, highlightColorHex, dummyMatrix, highlightColor]);
+    }, [filteredPallets, hoveredPalletId, selectedPalletId, isFilterActive, highlightColorHex, dummyMatrix, highlightColor]);
 
     return (
         <instancedMesh
@@ -85,6 +90,13 @@ export const PalletInstances = ({ onHoverInfoChange }: PalletInstancesProps) => 
             onPointerOut={() => {
                 setHoveredPalletId(null);
                 onHoverInfoChange?.(null);
+            }}
+            onClick={(event: ThreeEvent<MouseEvent>) => {
+                event.stopPropagation();
+                if (event.instanceId === undefined) return;
+                const pallet = filteredPallets[event.instanceId];
+                if (!pallet) return;
+                setSelectedPalletId(pallet.id);
             }}
         >
             <boxGeometry args={WAREHOUSE_CONFIG.PALLET_SIZE} />

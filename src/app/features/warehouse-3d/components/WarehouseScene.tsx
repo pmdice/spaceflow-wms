@@ -7,6 +7,7 @@ import { OrbitControls, Environment, Grid } from '@react-three/drei';
 import { PalletInstances } from './PalletInstances';
 import { ShelfInstances } from './ShelfInstances';
 import type { SpatialPallet } from '@/types/wms';
+import { useLogisticsStore } from '@/store/useLogisticsStore';
 
 type HoverInfo = {
     pallet: SpatialPallet;
@@ -17,6 +18,7 @@ type HoverInfo = {
 export const WarehouseScene = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
+    const setSelectedPalletId = useLogisticsStore((state) => state.setSelectedPalletId);
 
     useEffect(() => {
         const originalWarn = console.warn;
@@ -62,6 +64,7 @@ export const WarehouseScene = () => {
             <Canvas
                 camera={{ position: [20, 20, 20], fov: 50 }}
                 shadows={{ type: THREE.PCFShadowMap }}
+                onPointerMissed={() => setSelectedPalletId(null)}
             >
                 {/* Light, clean backdrop inspired by reference */}
                 <color attach="background" args={['#eef2f8']} />
