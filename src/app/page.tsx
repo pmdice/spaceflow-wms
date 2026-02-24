@@ -82,7 +82,10 @@ export default function DashboardPage() {
                 "absolute inset-0 z-0 transition-opacity duration-700 ease-in-out",
                 is3DInteractive ? "pointer-events-auto opacity-100" : "pointer-events-auto opacity-80"
             )}>
-                <WarehouseScene />
+                <WarehouseScene
+                    isFullscreen3D={is3DInteractive}
+                    isListExpanded={isListExpanded}
+                />
             </div>
 
             {/* --- 2. LAYER: UI OVERLAY --- */}

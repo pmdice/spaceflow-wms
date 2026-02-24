@@ -82,7 +82,7 @@ export const ShelfInstances = () => {
 
     return (
         <>
-            <instancedMesh ref={frameRef} args={[undefined, undefined, totalRacks]}>
+            <instancedMesh ref={frameRef} args={[undefined, undefined, totalRacks]} raycast={() => null}>
                 <boxGeometry args={rackSize} />
                 <meshStandardMaterial
                     color="#475569"
@@ -93,7 +93,7 @@ export const ShelfInstances = () => {
                 />
             </instancedMesh>
 
-            <instancedMesh ref={deckRef} args={[undefined, undefined, totalDecks]}>
+            <instancedMesh ref={deckRef} args={[undefined, undefined, totalDecks]} raycast={() => null}>
                 <boxGeometry args={deckSize} />
                 <meshStandardMaterial
                     color="#94a3b8"
