@@ -29,6 +29,7 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false 
     const setSelectedPalletId = useLogisticsStore((state) => state.setSelectedPalletId);
     const selectedPalletId = useLogisticsStore((state) => state.selectedPalletId);
     const filteredPallets = useLogisticsStore((state) => state.filteredPallets);
+    const filterRevision = useLogisticsStore((state) => state.filterRevision);
 
     useEffect(() => {
         const originalWarn = console.warn;
@@ -114,6 +115,7 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false 
                     controlsRef={controlsRef}
                     isFullscreen3D={isFullscreen3D}
                     isListExpanded={isListExpanded}
+                    filterRevision={filterRevision}
                 />
 
                 {/* 5. Steuerung */}
@@ -153,18 +155,21 @@ function CameraFocusController({
     controlsRef,
     isFullscreen3D,
     isListExpanded,
+    filterRevision,
 }: {
     selectedPalletId: string | null;
     pallets: SpatialPallet[];
     controlsRef: React.RefObject<any>;
     isFullscreen3D: boolean;
     isListExpanded: boolean;
+    filterRevision: number;
 }) {
     const { camera } = useThree();
     const desiredCameraPos = useRef(new THREE.Vector3());
     const desiredTarget = useRef(new THREE.Vector3());
     const defaultCameraPos = useRef(new THREE.Vector3());
     const defaultTarget = useRef(new THREE.Vector3());
+    const lastHandledFilterRevision = useRef<number>(-1);
     const hasDefaults = useRef(false);
     const isAnimating = useRef(false);
 
@@ -177,6 +182,38 @@ function CameraFocusController({
             desiredCameraPos.current.copy(camera.position);
             desiredTarget.current.copy(controlsRef.current.target);
             hasDefaults.current = true;
+        }
+
+        if (!selectedPalletId && filterRevision !== lastHandledFilterRevision.current && pallets.length > 0) {
+            const bounds = new THREE.Box3();
+            pallets.forEach((pallet) => {
+                const pos = calculate3DPosition(pallet.logicalAddress);
+                const y = pos.y + (WAREHOUSE_CONFIG.PALLET_SIZE[1] / 2);
+                bounds.expandByPoint(new THREE.Vector3(pos.x, y, pos.z));
+            });
+
+            const center = bounds.getCenter(new THREE.Vector3());
+            const size = bounds.getSize(new THREE.Vector3());
+            const radius = Math.max(size.x, size.z, size.y) * 0.55;
+
+            const fov = (camera as THREE.PerspectiveCamera).fov * (Math.PI / 180);
+            const fitDistance = Math.max(14, (radius / Math.tan(fov / 2)) * 1.5);
+            const isSplitView = !isFullscreen3D && !isListExpanded;
+            const fitOffset = isSplitView
+                ? new THREE.Vector3(fitDistance * 0.95, fitDistance * 1.28, fitDistance * 0.95)
+                : new THREE.Vector3(fitDistance * 0.75, fitDistance * 0.75, fitDistance * 0.75);
+
+            desiredTarget.current.copy(center);
+            if (isSplitView) {
+                // Shift look target downward so fitted content sits in the top third (list open).
+                desiredTarget.current.y -= Math.max(1.8, size.y * 0.35);
+            } else {
+                desiredTarget.current.y += 0.3;
+            }
+            desiredCameraPos.current.copy(desiredTarget.current).add(fitOffset);
+            isAnimating.current = true;
+            lastHandledFilterRevision.current = filterRevision;
+            return;
         }
 
         if (!selectedPalletId) {
@@ -201,7 +238,7 @@ function CameraFocusController({
         desiredTarget.current.copy(target);
         desiredCameraPos.current.copy(target).add(offset);
         isAnimating.current = true;
-    }, [selectedPalletId, pallets, controlsRef, isFullscreen3D, isListExpanded]);
+    }, [selectedPalletId, pallets, controlsRef, isFullscreen3D, isListExpanded, filterRevision, camera]);
 
     useFrame((_, delta) => {
         if (!isAnimating.current || !controlsRef.current) return;

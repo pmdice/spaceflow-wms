@@ -12,6 +12,7 @@ interface LogisticsState {
     activeHighlightColor: string | null;
     hoveredPalletId: string | null;
     selectedPalletId: string | null;
+    filterRevision: number;
 
     // Actions
     fetchData: () => Promise<void>;
@@ -29,6 +30,7 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
     activeHighlightColor: null,
     hoveredPalletId: null,
     selectedPalletId: null,
+    filterRevision: 0,
 
     // 1. Initiales Laden der Mock-Daten
     fetchData: async () => {
@@ -84,6 +86,7 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
             activeHighlightColor: filter.highlightColor || null,
             hoveredPalletId: null,
             selectedPalletId: null,
+            filterRevision: get().filterRevision + 1,
         });
     },
 
@@ -94,6 +97,7 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
             activeHighlightColor: null,
             hoveredPalletId: null,
             selectedPalletId: null,
+            filterRevision: get().filterRevision + 1,
         });
     },
 
