@@ -176,6 +176,19 @@ function CameraFocusController({
     const lastHandledFilterRevision = useRef<number>(-1);
     const hasDefaults = useRef(false);
     const isAnimating = useRef(false);
+    const animationProgress = useRef(1);
+    const animationDuration = 1.1;
+    const startCameraPos = useRef(new THREE.Vector3());
+    const startTarget = useRef(new THREE.Vector3());
+
+    const startAnimation = () => {
+        if (!controlsRef.current) return;
+        startCameraPos.current.copy(camera.position);
+        startTarget.current.copy(controlsRef.current.target);
+        animationProgress.current = 0;
+        isAnimating.current = true;
+        controlsRef.current.enableDamping = false;
+    };
 
     useEffect(() => {
         if (!controlsRef.current) return;
@@ -185,52 +198,12 @@ function CameraFocusController({
             defaultTarget.current.copy(controlsRef.current.target);
             desiredCameraPos.current.copy(camera.position);
             desiredTarget.current.copy(controlsRef.current.target);
+            lastHandledFilterRevision.current = filterRevision;
             hasDefaults.current = true;
         }
 
-        if (!selectedPalletId && filterRevision !== lastHandledFilterRevision.current && pallets.length > 0) {
-            const bounds = new THREE.Box3();
-            pallets.forEach((pallet) => {
-                const pos = calculate3DPosition(pallet.logicalAddress);
-                const y = pos.y + (WAREHOUSE_CONFIG.PALLET_SIZE[1] / 2);
-                bounds.expandByPoint(new THREE.Vector3(pos.x, y, pos.z));
-            });
-
-            const center = bounds.getCenter(new THREE.Vector3());
-            const boundsSize = bounds.getSize(new THREE.Vector3());
-            const radius = Math.max(boundsSize.x, boundsSize.z, boundsSize.y) * 0.55;
-
-            const fov = (camera as THREE.PerspectiveCamera).fov * (Math.PI / 180);
-            const fitDistance = Math.max(20, (radius / Math.tan(fov / 2)) * 2.1);
-            const isSplitView = !isFullscreen3D && !isListExpanded;
-            const fitOffset = isSplitView
-                ? new THREE.Vector3(fitDistance * 0.95, fitDistance * 1.02, fitDistance * 0.95)
-                : new THREE.Vector3(fitDistance * 0.75, fitDistance * 0.75, fitDistance * 0.75);
-
-            desiredTarget.current.copy(center);
-            if (isSplitView) {
-                desiredTarget.current.y = solveTargetYForTopThird({
-                    camera,
-                    cameraPosition: desiredCameraPos.current,
-                    baseTarget: desiredTarget.current,
-                    focusPoint: center,
-                    viewportWidth: size.width,
-                    viewportHeight: size.height,
-                    panelHeightRatio: splitPanelHeightRatio,
-                    headerHeightPx: 64,
-                    maxTargetShift: Math.max(2.5, boundsSize.y * 1.2 + 2),
-                });
-            } else {
-                desiredTarget.current.y += 0.3;
-            }
-            desiredCameraPos.current.copy(desiredTarget.current).add(fitOffset);
-            isAnimating.current = true;
-            lastHandledFilterRevision.current = filterRevision;
-            return;
-        }
-
         if (!selectedPalletId) {
-            if (pallets.length > 0) {
+            if (filterRevision !== lastHandledFilterRevision.current && pallets.length > 0) {
                 const bounds = new THREE.Box3();
                 pallets.forEach((pallet) => {
                     const pos = calculate3DPosition(pallet.logicalAddress);
@@ -265,13 +238,14 @@ function CameraFocusController({
                     desiredTarget.current.y += 0.3;
                 }
                 desiredCameraPos.current.copy(desiredTarget.current).add(fitOffset);
-                isAnimating.current = true;
+                startAnimation();
+                lastHandledFilterRevision.current = filterRevision;
                 return;
             }
 
             desiredCameraPos.current.copy(defaultCameraPos.current);
             desiredTarget.current.copy(defaultTarget.current);
-            isAnimating.current = true;
+            startAnimation();
             return;
         }
 
@@ -289,21 +263,25 @@ function CameraFocusController({
             : new THREE.Vector3(5.2, 4.8, 5.2);
         desiredTarget.current.copy(target);
         desiredCameraPos.current.copy(target).add(offset);
-        isAnimating.current = true;
+        startAnimation();
     }, [selectedPalletId, pallets, controlsRef, isFullscreen3D, isListExpanded, filterRevision, camera, size, splitPanelHeightRatio]);
 
     useFrame((_, delta) => {
         if (!isAnimating.current || !controlsRef.current) return;
 
-        const alpha = 1 - Math.exp(-7 * delta);
-        camera.position.lerp(desiredCameraPos.current, alpha);
-        controlsRef.current.target.lerp(desiredTarget.current, alpha);
+        animationProgress.current = Math.min(1, animationProgress.current + (delta / animationDuration));
+        const t = animationProgress.current;
+        const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+        camera.position.lerpVectors(startCameraPos.current, desiredCameraPos.current, eased);
+        controlsRef.current.target.lerpVectors(startTarget.current, desiredTarget.current, eased);
         controlsRef.current.update();
 
-        if (
-            camera.position.distanceTo(desiredCameraPos.current) < 0.05 &&
-            controlsRef.current.target.distanceTo(desiredTarget.current) < 0.05
-        ) {
+        if (animationProgress.current >= 1) {
+            camera.position.copy(desiredCameraPos.current);
+            controlsRef.current.target.copy(desiredTarget.current);
+            controlsRef.current.enableDamping = true;
+            controlsRef.current.update();
             isAnimating.current = false;
         }
     });
