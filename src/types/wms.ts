@@ -29,6 +29,10 @@ export const LogisticsFilterSchema = z.object({
         .describe("Der Status der Fracht. 'all', wenn nicht spezifisch gefragt."),
     urgencyLevel: z.enum(['all', 'low', 'medium', 'high'])
         .describe("Dringlichkeitsstufe. 'all', wenn nicht erwähnt."),
+    weightMinKg: z.number().nullable()
+        .describe("Minimales Gewicht in kg. Beispiel: 'über 300kg' => 300. Null, wenn nicht erwähnt."),
+    weightMaxKg: z.number().nullable()
+        .describe("Maximales Gewicht in kg. Beispiel: 'unter 300kg' => 300. Null, wenn nicht erwähnt."),
     highlightColor: z.string().nullable()
         .describe("Ein Hex-Farbcode (z.B. '#ff0000' für rot), wenn der User eine farbliche Markierung wünscht."),
 });
