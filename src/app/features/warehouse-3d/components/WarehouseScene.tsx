@@ -20,9 +20,10 @@ type HoverInfo = {
 type WarehouseSceneProps = {
     isFullscreen3D?: boolean;
     isListExpanded?: boolean;
+    splitPanelHeightRatio?: number;
 };
 
-export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false }: WarehouseSceneProps) => {
+export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false, splitPanelHeightRatio = 0.48 }: WarehouseSceneProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const controlsRef = useRef<any>(null);
     const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
@@ -116,6 +117,7 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false 
                     isFullscreen3D={isFullscreen3D}
                     isListExpanded={isListExpanded}
                     filterRevision={filterRevision}
+                    splitPanelHeightRatio={splitPanelHeightRatio}
                 />
 
                 {/* 5. Steuerung */}
@@ -156,6 +158,7 @@ function CameraFocusController({
     isFullscreen3D,
     isListExpanded,
     filterRevision,
+    splitPanelHeightRatio,
 }: {
     selectedPalletId: string | null;
     pallets: SpatialPallet[];
@@ -163,8 +166,9 @@ function CameraFocusController({
     isFullscreen3D: boolean;
     isListExpanded: boolean;
     filterRevision: number;
+    splitPanelHeightRatio: number;
 }) {
-    const { camera } = useThree();
+    const { camera, size } = useThree();
     const desiredCameraPos = useRef(new THREE.Vector3());
     const desiredTarget = useRef(new THREE.Vector3());
     const defaultCameraPos = useRef(new THREE.Vector3());
@@ -193,20 +197,29 @@ function CameraFocusController({
             });
 
             const center = bounds.getCenter(new THREE.Vector3());
-            const size = bounds.getSize(new THREE.Vector3());
-            const radius = Math.max(size.x, size.z, size.y) * 0.55;
+            const boundsSize = bounds.getSize(new THREE.Vector3());
+            const radius = Math.max(boundsSize.x, boundsSize.z, boundsSize.y) * 0.55;
 
             const fov = (camera as THREE.PerspectiveCamera).fov * (Math.PI / 180);
-            const fitDistance = Math.max(14, (radius / Math.tan(fov / 2)) * 1.5);
+            const fitDistance = Math.max(20, (radius / Math.tan(fov / 2)) * 2.1);
             const isSplitView = !isFullscreen3D && !isListExpanded;
             const fitOffset = isSplitView
-                ? new THREE.Vector3(fitDistance * 0.95, fitDistance * 1.28, fitDistance * 0.95)
+                ? new THREE.Vector3(fitDistance * 0.95, fitDistance * 1.02, fitDistance * 0.95)
                 : new THREE.Vector3(fitDistance * 0.75, fitDistance * 0.75, fitDistance * 0.75);
 
             desiredTarget.current.copy(center);
             if (isSplitView) {
-                // Shift look target downward so fitted content sits in the top third (list open).
-                desiredTarget.current.y -= Math.max(1.8, size.y * 0.35);
+                desiredTarget.current.y = solveTargetYForTopThird({
+                    camera,
+                    cameraPosition: desiredCameraPos.current,
+                    baseTarget: desiredTarget.current,
+                    focusPoint: center,
+                    viewportWidth: size.width,
+                    viewportHeight: size.height,
+                    panelHeightRatio: splitPanelHeightRatio,
+                    headerHeightPx: 64,
+                    maxTargetShift: Math.max(2.5, boundsSize.y * 1.2 + 2),
+                });
             } else {
                 desiredTarget.current.y += 0.3;
             }
@@ -217,6 +230,45 @@ function CameraFocusController({
         }
 
         if (!selectedPalletId) {
+            if (pallets.length > 0) {
+                const bounds = new THREE.Box3();
+                pallets.forEach((pallet) => {
+                    const pos = calculate3DPosition(pallet.logicalAddress);
+                    const y = pos.y + (WAREHOUSE_CONFIG.PALLET_SIZE[1] / 2);
+                    bounds.expandByPoint(new THREE.Vector3(pos.x, y, pos.z));
+                });
+
+                const center = bounds.getCenter(new THREE.Vector3());
+                const boundsSize = bounds.getSize(new THREE.Vector3());
+                const radius = Math.max(boundsSize.x, boundsSize.z, boundsSize.y) * 0.58;
+                const fov = (camera as THREE.PerspectiveCamera).fov * (Math.PI / 180);
+                const fitDistance = Math.max(22, (radius / Math.tan(fov / 2)) * 2.25);
+                const isSplitView = !isFullscreen3D && !isListExpanded;
+                const fitOffset = isSplitView
+                    ? new THREE.Vector3(fitDistance * 0.95, fitDistance * 1.06, fitDistance * 0.95)
+                    : new THREE.Vector3(fitDistance * 0.78, fitDistance * 0.78, fitDistance * 0.78);
+
+                desiredTarget.current.copy(center);
+                if (isSplitView) {
+                    desiredTarget.current.y = solveTargetYForTopThird({
+                        camera,
+                        cameraPosition: desiredCameraPos.current,
+                        baseTarget: desiredTarget.current,
+                        focusPoint: center,
+                        viewportWidth: size.width,
+                        viewportHeight: size.height,
+                        panelHeightRatio: splitPanelHeightRatio,
+                        headerHeightPx: 64,
+                        maxTargetShift: Math.max(2.8, boundsSize.y * 1.25 + 2.2),
+                    });
+                } else {
+                    desiredTarget.current.y += 0.3;
+                }
+                desiredCameraPos.current.copy(desiredTarget.current).add(fitOffset);
+                isAnimating.current = true;
+                return;
+            }
+
             desiredCameraPos.current.copy(defaultCameraPos.current);
             desiredTarget.current.copy(defaultTarget.current);
             isAnimating.current = true;
@@ -238,7 +290,7 @@ function CameraFocusController({
         desiredTarget.current.copy(target);
         desiredCameraPos.current.copy(target).add(offset);
         isAnimating.current = true;
-    }, [selectedPalletId, pallets, controlsRef, isFullscreen3D, isListExpanded, filterRevision, camera]);
+    }, [selectedPalletId, pallets, controlsRef, isFullscreen3D, isListExpanded, filterRevision, camera, size, splitPanelHeightRatio]);
 
     useFrame((_, delta) => {
         if (!isAnimating.current || !controlsRef.current) return;
@@ -257,4 +309,71 @@ function CameraFocusController({
     });
 
     return null;
+}
+
+function solveTargetYForTopThird({
+    camera,
+    cameraPosition,
+    baseTarget,
+    focusPoint,
+    viewportWidth,
+    viewportHeight,
+    panelHeightRatio,
+    headerHeightPx,
+    maxTargetShift,
+}: {
+    camera: THREE.Camera;
+    cameraPosition: THREE.Vector3;
+    baseTarget: THREE.Vector3;
+    focusPoint: THREE.Vector3;
+    viewportWidth: number;
+    viewportHeight: number;
+    panelHeightRatio: number;
+    headerHeightPx: number;
+    maxTargetShift: number;
+}) {
+    const perspective = camera as THREE.PerspectiveCamera;
+    const testCam = perspective.clone();
+    testCam.position.copy(cameraPosition);
+    testCam.aspect = viewportWidth / Math.max(1, viewportHeight);
+    testCam.updateProjectionMatrix();
+
+    const panelPx = viewportHeight * panelHeightRatio;
+    const visibleTop = headerHeightPx;
+    const visibleBottom = Math.max(visibleTop + 40, viewportHeight - panelPx);
+    const visibleHeight = visibleBottom - visibleTop;
+    const desiredScreenY = visibleTop + (visibleHeight / 3);
+
+    const projectY = (targetY: number) => {
+        const lookTarget = new THREE.Vector3(baseTarget.x, targetY, baseTarget.z);
+        testCam.lookAt(lookTarget);
+        testCam.updateMatrixWorld(true);
+        const projected = focusPoint.clone().project(testCam);
+        return ((1 - projected.y) / 2) * viewportHeight;
+    };
+
+    let currentY = baseTarget.y;
+    for (let i = 0; i < 8; i++) {
+        const y0 = projectY(currentY);
+        const error = y0 - desiredScreenY;
+        if (Math.abs(error) < 1.5) break;
+
+        const eps = 0.25;
+        const y1 = projectY(currentY + eps);
+        const slope = (y1 - y0) / eps;
+        if (Math.abs(slope) < 1e-4) break;
+
+        currentY = currentY - (error / slope);
+        currentY = THREE.MathUtils.clamp(
+            currentY,
+            baseTarget.y - maxTargetShift,
+            baseTarget.y + maxTargetShift
+        );
+    }
+
+    return THREE.MathUtils.clamp(
+        currentY,
+        baseTarget.y - maxTargetShift,
+        baseTarget.y + maxTargetShift
+    );
 }

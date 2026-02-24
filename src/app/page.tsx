@@ -85,6 +85,7 @@ export default function DashboardPage() {
                 <WarehouseScene
                     isFullscreen3D={is3DInteractive}
                     isListExpanded={isListExpanded}
+                    splitPanelHeightRatio={BASE_LIST_PANEL_HEIGHT_DVH / 100}
                 />
             </div>
 
