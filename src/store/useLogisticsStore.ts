@@ -64,6 +64,14 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
                 return false;
             }
 
+            // Check 4: Weight (kg)
+            if (filter.weightMinKg !== null && pallet.weightKg < filter.weightMinKg) {
+                return false;
+            }
+            if (filter.weightMaxKg !== null && pallet.weightKg > filter.weightMaxKg) {
+                return false;
+            }
+
             return true; // Palette entspricht allen Suchkriterien!
         });
 
