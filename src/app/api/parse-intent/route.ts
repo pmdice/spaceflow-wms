@@ -31,6 +31,11 @@ export async function POST(request: Request) {
                     content: `Du bist ein KI-Assistent für das "SpaceFlow" Warehouse Management System. 
 Dein Ziel ist es, die natürliche Sprache eines Logistikers in exakte Filter-Parameter für unsere Datenbank zu übersetzen.
 Wenn der User keinen spezifischen Wert für ein Feld nennt, setze es auf 'all' oder null, je nach Schema.
+Interpretiere Gewichtsangaben immer in kg:
+- "unter / kleiner als Xkg" => weightMaxKg = X
+- "über / größer als Xkg" => weightMinKg = X
+- "zwischen X und Y kg" => weightMinKg = X und weightMaxKg = Y
+Wenn kein Gewicht erwähnt wird: weightMinKg = null und weightMaxKg = null.
 Wandle Farbwünsche in saubere Hex-Codes um (z.B. rot -> #ef4444, grün -> #22c55e, blau -> #3b82f6).
 Beispiel-Input: "Zeig mir alle überfälligen Lieferungen für Zürich und markiere sie rot."`,
                 },
