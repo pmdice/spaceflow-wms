@@ -133,6 +133,7 @@ export const LogisticsTable = () => {
         },
     ], []);
 
+    // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table exposes non-memoizable APIs; this warning is expected.
     const table = useReactTable({
         data: pallets,
         columns,

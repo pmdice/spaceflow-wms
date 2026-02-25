@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { PalletInstances } from './PalletInstances';
 import { ShelfInstances } from './ShelfInstances';
 import type { SpatialPallet } from '@/types/wms';
@@ -25,7 +26,7 @@ type WarehouseSceneProps = {
 
 export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false, splitPanelHeightRatio = 0.48 }: WarehouseSceneProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const controlsRef = useRef<any>(null);
+    const controlsRef = useRef<OrbitControlsImpl | null>(null);
     const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
     const setSelectedPalletId = useLogisticsStore((state) => state.setSelectedPalletId);
     const selectedPalletId = useLogisticsStore((state) => state.selectedPalletId);
@@ -160,7 +161,7 @@ function CameraFocusController({
 }: {
     selectedPalletId: string | null;
     pallets: SpatialPallet[];
-    controlsRef: React.RefObject<any>;
+    controlsRef: React.RefObject<OrbitControlsImpl | null>;
     isFullscreen3D: boolean;
     isListExpanded: boolean;
     filterRevision: number;
@@ -181,16 +182,16 @@ function CameraFocusController({
     const startCameraPos = useRef(new THREE.Vector3());
     const startTarget = useRef(new THREE.Vector3());
 
-    const startAnimation = () => {
+    const startAnimation = useCallback(() => {
         if (!controlsRef.current) return;
         startCameraPos.current.copy(camera.position);
         startTarget.current.copy(controlsRef.current.target);
         animationProgress.current = 0;
         isAnimating.current = true;
         controlsRef.current.enableDamping = false;
-    };
+    }, [camera, controlsRef]);
 
-    const applyOverviewFrame = (animate: boolean) => {
+    const applyOverviewFrame = useCallback((animate: boolean) => {
         if (pallets.length === 0 || !controlsRef.current) return false;
 
         const bounds = new THREE.Box3();
@@ -242,7 +243,17 @@ function CameraFocusController({
         }
         hasOverviewFrame.current = true;
         return true;
-    };
+    }, [
+        pallets,
+        controlsRef,
+        camera,
+        isFullscreen3D,
+        isListExpanded,
+        size.width,
+        size.height,
+        splitPanelHeightRatio,
+        startAnimation,
+    ]);
 
     useEffect(() => {
         if (!controlsRef.current) return;
@@ -299,7 +310,19 @@ function CameraFocusController({
         desiredCameraPos.current.copy(target).add(offset);
         startAnimation();
         prevSelectedPalletId.current = selectedPalletId;
-    }, [selectedPalletId, pallets, controlsRef, isFullscreen3D, isListExpanded, filterRevision, camera, size, splitPanelHeightRatio]);
+    }, [
+        selectedPalletId,
+        pallets,
+        controlsRef,
+        isFullscreen3D,
+        isListExpanded,
+        filterRevision,
+        camera,
+        size,
+        splitPanelHeightRatio,
+        applyOverviewFrame,
+        startAnimation,
+    ]);
 
     useFrame((_, delta) => {
         if (!isAnimating.current || !controlsRef.current) return;
