@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { SpatialPallet, LogisticsFilter } from '../types/wms';
+import { filterPallets } from './filter-pallets';
 
 interface LogisticsState {
     pallets: SpatialPallet[];
@@ -38,36 +39,15 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
             const data: SpatialPallet[] = await response.json();
 
             set({ pallets: data, filteredPallets: data, isLoading: false });
-        } catch (err: any) {
-            set({ error: err.message, isLoading: false });
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to fetch pallets data';
+            set({ error: message, isLoading: false });
         }
     },
 
     applyAIFilter: (filter) => {
         const { pallets } = get();
-
-        const result = pallets.filter((pallet) => {
-            if (filter.destination && !pallet.destination.toLowerCase().includes(filter.destination.toLowerCase())) {
-                return false;
-            }
-
-            if (filter.status !== 'all' && pallet.status !== filter.status) {
-                return false;
-            }
-
-            if (filter.urgencyLevel !== 'all' && pallet.urgency !== filter.urgencyLevel) {
-                return false;
-            }
-
-            if (filter.weightMinKg !== null && pallet.weightKg < filter.weightMinKg) {
-                return false;
-            }
-            if (filter.weightMaxKg !== null && pallet.weightKg > filter.weightMaxKg) {
-                return false;
-            }
-
-            return true;
-        });
+        const result = filterPallets(pallets, filter);
 
         set({
             filteredPallets: result,
