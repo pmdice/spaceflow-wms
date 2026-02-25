@@ -27,7 +27,8 @@ SpaceFlow introduces a constrained AI-assisted search flow that converts natural
 
 ### Performance Strategy
 
-- 3D warehouse primitives use `THREE.InstancedMesh` to reduce draw calls.
+- 3D shelf structures use `THREE.InstancedMesh` to reduce draw calls.
+- Pallets are currently rendered as individual meshes for interaction clarity.
 - The tabular view uses virtualization via `@tanstack/react-virtual`.
 - This combination supports large datasets while preserving interactive frame rates and DOM performance.
 
@@ -38,7 +39,7 @@ Current controls include:
 
 - Global HTTP security headers, including CSP.
 - API payload and input hardening for LLM-facing routes.
-- Edge middleware routing controls for API and admin paths.
+- Edge middleware controls for API routes.
 - OWASP Top 10 (2021) mapping for interview and review traceability.
 
 ## Technology Stack
