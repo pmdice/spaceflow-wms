@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { zodResponseFormat } from 'openai/helpers/zod';
+import { z } from 'zod';
 import { LogisticsFilterSchema } from '@/types/wms';
 
 // Ensure this route runs in the Node.js runtime (OpenAI SDK compatibility)
@@ -33,13 +34,6 @@ export async function POST(request: Request) {
         if (prompt.length > 500) {
             return NextResponse.json(
                 { error: 'Prompt ist zu lang. Maximale Länge ist 500 Zeichen.' },
-                { status: 400 }
-            );
-        }
-
-        if (!prompt || typeof prompt !== 'string') {
-            return NextResponse.json(
-                { error: 'Ein gültiger Text-Prompt wird benötigt.' },
                 { status: 400 }
             );
         }
@@ -84,12 +78,12 @@ Beispiel-Input: "Zeig mir alle überfälligen Lieferungen für Zürich und marki
         const safeData = LogisticsFilterSchema.parse(parsedFilter);
 
         return NextResponse.json({ filter: safeData });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('BFF Parse Intent Error:', error);
 
-        if (error.name === 'ZodError') {
+        if (error instanceof z.ZodError) {
             return NextResponse.json(
-                { error: 'Validierungsfehler bei der KI-Antwort.', details: error.errors },
+                { error: 'The AI response did not match the expected filter schema.' },
                 { status: 500 }
             );
         }
