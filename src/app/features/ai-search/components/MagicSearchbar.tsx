@@ -1,16 +1,14 @@
-'use client'; // Zwingend erforderlich für useState und Zustand im App Router!
+'use client';
 
 import { useState } from 'react';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { Loader2, Sparkles, X } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Falls du die cn() Utility aus dem JLS Projekt hast
+import { cn } from '@/lib/utils';
 
 export const MagicSearchbar = () => {
     const [prompt, setPrompt] = useState('');
     const [isSearching, setIsSearching] = useState(false);
 
-    // Wir abonnieren nur die Actions und spezifischen States aus dem Store,
-    // um unnötige Re-Renders der Suchleiste zu vermeiden.
     const applyAIFilter = useLogisticsStore((state) => state.applyAIFilter);
     const resetFilter = useLogisticsStore((state) => state.resetFilter);
     const isFiltered = useLogisticsStore((state) => state.pallets.length !== state.filteredPallets.length);
@@ -34,14 +32,11 @@ export const MagicSearchbar = () => {
 
             const data = await response.json();
 
-            // BAM! Wir übergeben das Zod-validierte Objekt an unseren Store.
-            // Ab hier übernehmen React Three Fiber und die 2D Tabelle automatisch.
             if (data.filter) {
                 applyAIFilter(data.filter);
             }
         } catch (error) {
             console.error("Fehler bei der Intent-Erkennung:", error);
-            // Senior Move: In Produktion würde hier ein Toast (z.B. react-hot-toast) aufpoppen
         } finally {
             setIsSearching(false);
         }

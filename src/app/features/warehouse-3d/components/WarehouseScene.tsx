@@ -91,10 +91,9 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false,
                     castShadow
                     shadow-mapSize={[2048, 2048]}
                 />
-
-                {/* 3. Der Boden */}
+                {/* Ground reference grid */}
                 <Grid
-                    position={[0, -0.1, 0]} // Leicht unter den Regalen
+                    position={[0, -0.1, 0]}
                     args={[100, 100]}
                     cellSize={2}
                     cellThickness={0.6}
@@ -106,7 +105,7 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false,
                     raycast={() => null}
                 />
 
-                {/* 4. Unsere 3D-Objekte */}
+                {/* Scene geometry */}
                 <ShelfInstances />
                 <PalletInstances onHoverInfoChange={handleHoverInfoChange} />
                 <CameraFocusController
@@ -119,7 +118,7 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false,
                     splitPanelHeightRatio={splitPanelHeightRatio}
                 />
 
-                {/* 5. Steuerung */}
+                {/* Camera controls */}
                 <OrbitControls
                     ref={controlsRef}
                     makeDefault

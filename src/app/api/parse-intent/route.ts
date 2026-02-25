@@ -6,26 +6,36 @@ import { LogisticsFilterSchema } from '@/types/wms';
 // Ensure this route runs in the Node.js runtime (OpenAI SDK compatibility)
 export const runtime = 'nodejs';
 
-// Initialisiere den OpenAI Client.
 const openai = new OpenAI();
 
 export async function POST(request: Request) {
     try {
-        // 1. Request Body parsen
         const contentLengthHeader = request.headers.get('content-length');
+        const contentLength = contentLengthHeader ? Number.parseInt(contentLengthHeader, 10) : 0;
 
+        if (Number.isFinite(contentLength) && contentLength > 2000) {
             return NextResponse.json(
+                { error: 'Payload zu groß. Maximale Request-Größe ist 2000 Bytes.' },
                 { status: 413 }
+            );
         }
+
         const body = await request.json();
         const { prompt } = body;
 
+        if (typeof prompt !== 'string' || prompt.trim().length === 0) {
             return NextResponse.json(
+                { error: 'Ein gültiger Text-Prompt wird benötigt.' },
                 { status: 400 }
-        }
-        if (prompt.length > 500) {
-                { error: 'Prompt ist zu lang. Maximale Länge ist 500 Zeichen.' },
             );
+        }
+
+        if (prompt.length > 500) {
+            return NextResponse.json(
+                { error: 'Prompt ist zu lang. Maximale Länge ist 500 Zeichen.' },
+                { status: 400 }
+            );
+        }
 
         if (!prompt || typeof prompt !== 'string') {
             return NextResponse.json(
@@ -34,7 +44,6 @@ export async function POST(request: Request) {
             );
         }
 
-        // 2. OpenAI Aufruf (stable API) + Structured Outputs via response_format
         const completion = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [
@@ -60,7 +69,6 @@ Beispiel-Input: "Zeig mir alle überfälligen Lieferungen für Zürich und marki
             temperature: 0.1,
         });
 
-        // 3. Content holen und JSON parsen (statt .beta...parse())
         const content = completion.choices[0]?.message?.content;
         if (!content) {
             throw new Error('OpenAI hat keinen Inhalt zurückgegeben.');
@@ -73,10 +81,8 @@ Beispiel-Input: "Zeig mir alle überfälligen Lieferungen für Zürich und marki
             throw new Error('OpenAI hat kein gültiges JSON zurückgegeben.');
         }
 
-        // 4. Double-Check Security (Zod Validierung auf unserem eigenen Server)
         const safeData = LogisticsFilterSchema.parse(parsedFilter);
 
-        // 5. Saubere Daten ans Frontend zurückliefern
         return NextResponse.json({ filter: safeData });
     } catch (error: any) {
         console.error('BFF Parse Intent Error:', error);

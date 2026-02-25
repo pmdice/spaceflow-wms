@@ -38,7 +38,6 @@ export default function DashboardPage() {
     const delayedCount = pallets.filter(p => p.status === 'delayed').length;
     const selectedPallet = allPallets.find((p) => p.id === selectedPalletId) ?? null;
 
-    // --- View State ---
     const [is3DInteractive, setIs3DInteractive] = useState(false);
     const [isListExpanded, setIsListExpanded] = useState(false);
 
@@ -76,8 +75,6 @@ export default function DashboardPage() {
     return (
         <SidebarInset className="relative h-dvh bg-[#F4F4F5] overflow-hidden font-sans flex flex-col">
 
-            {/* --- 1. LAYER: 3D BACKGROUND --- */}
-            {/* We control pointer-events based on the is3DInteractive state */}
             <div className={cn(
                 "absolute inset-0 z-0 transition-opacity duration-700 ease-in-out",
                 is3DInteractive ? "pointer-events-auto opacity-100" : "pointer-events-auto opacity-80"
@@ -89,10 +86,8 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* --- 2. LAYER: UI OVERLAY --- */}
             <div className="relative z-10 flex flex-col h-full overflow-hidden pointer-events-none">
 
-                {/* --- HEADER (Edge to Edge) --- */}
                 <header className={cn(
                     "flex h-16 shrink-0 items-center justify-between px-6 pointer-events-auto bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm z-20 transition-all duration-500",
                     is3DInteractive ? "translate-y-[-100%] opacity-0" : "translate-y-0 opacity-100"
@@ -123,7 +118,6 @@ export default function DashboardPage() {
                     </div>
                 </header>
 
-                {/* --- ENTER 3D MODE BUTTON (Canvas top-right) --- */}
                 <div className={cn(
                     "absolute top-20 right-6 pointer-events-auto transition-all duration-500 ease-in-out z-30",
                     is3DInteractive ? "opacity-0 translate-y-[-10px] scale-95 pointer-events-none" : "opacity-100 translate-y-0 scale-100"
@@ -154,7 +148,6 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-    {/* --- EXIT 3D MODE BUTTON (Only visible when interactive) --- */}
                 <div className={cn(
                     "absolute top-8 left-1/2 -translate-x-1/2 pointer-events-auto transition-all duration-500 ease-in-out z-30",
                     is3DInteractive ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-[-20px] scale-95 pointer-events-none"
@@ -184,20 +177,15 @@ export default function DashboardPage() {
                     onClose={() => setSelectedPalletId(null)}
                 />
 
-                {/* Spacer keeps bottom panel docked while controls float above canvas */}
                 <div className="flex-1" />
 
-                {/* --- BOTTOM DATA PANEL (Edge to Edge Drawer) --- */}
-                {/* It slides down out of view when 3D mode is active */}
                 <div className={cn(
                     "pointer-events-auto w-full shrink-0 transition-[height,transform] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
                     is3DInteractive ? "translate-y-full" : "translate-y-0"
                 )}
                 style={{ height: isListExpanded ? "calc(100dvh - 4rem)" : `${BASE_LIST_PANEL_HEIGHT_DVH}dvh` }}>
                     <Card className="bg-white/90 backdrop-blur-2xl border-t border-white/60 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] rounded-none h-full flex flex-col py-0 gap-0">
-                        {/* Panel Body: The Virtualized Table */}
                         <CardContent className="p-0 overflow-hidden flex-1 relative">
-                            {/* Gradient mask for smooth scroll appearance */}
                             <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none" />
                             <LogisticsTable />
                         </CardContent>

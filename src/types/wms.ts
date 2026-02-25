@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-// --- 1. Physische Daten (WMS Basis) ---
-
 export interface StorageLocation {
     id: string;
     zone: string;
@@ -20,9 +18,6 @@ export interface SpatialPallet {
     logicalAddress: StorageLocation;
 }
 
-// --- 2. KI Filter Schema (Zod) ---
-// Das ist das Schema, das wir an OpenAI schicken und womit wir validieren
-
 export const LogisticsFilterSchema = z.object({
     destination: z.string().nullable().describe("Die exakte Zielstadt (z.B. 'Zürich', 'Bern'). Null, wenn nicht erwähnt."),
     status: z.enum(['all', 'stored', 'transit', 'delayed'])
@@ -37,5 +32,4 @@ export const LogisticsFilterSchema = z.object({
         .describe("Ein Hex-Farbcode (z.B. '#ff0000' für rot), wenn der User eine farbliche Markierung wünscht."),
 });
 
-// Inferiere den TypeScript Type direkt aus dem Zod Schema! (Senior Move)
 export type LogisticsFilter = z.infer<typeof LogisticsFilterSchema>;
