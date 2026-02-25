@@ -12,8 +12,20 @@ const openai = new OpenAI();
 export async function POST(request: Request) {
     try {
         // 1. Request Body parsen
+        const contentLengthHeader = request.headers.get('content-length');
+
+            return NextResponse.json(
+                { status: 413 }
+        }
         const body = await request.json();
         const { prompt } = body;
+
+            return NextResponse.json(
+                { status: 400 }
+        }
+        if (prompt.length > 500) {
+                { error: 'Prompt ist zu lang. Maximale Länge ist 500 Zeichen.' },
+            );
 
         if (!prompt || typeof prompt !== 'string') {
             return NextResponse.json(
