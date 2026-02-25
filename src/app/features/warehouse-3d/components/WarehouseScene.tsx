@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Environment, Grid } from '@react-three/drei';
+import { OrbitControls, Grid } from '@react-three/drei';
 import { PalletInstances } from './PalletInstances';
 import { ShelfInstances } from './ShelfInstances';
 import type { SpatialPallet } from '@/types/wms';
@@ -91,7 +91,6 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false,
                     castShadow
                     shadow-mapSize={[2048, 2048]}
                 />
-                <Environment preset="city" />
 
                 {/* 3. Der Boden */}
                 <Grid
