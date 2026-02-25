@@ -4,7 +4,7 @@ import type { SpatialPallet } from '@/types/wms';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { X, Package2, MapPin, Weight, Clock3, ShieldCheck } from 'lucide-react';
+import { X, Package2, MapPin, Weight, Clock3, ShieldCheck, type LucideIcon } from 'lucide-react';
 
 type ParcelDetailPanelProps = {
     pallet: SpatialPallet | null;
@@ -72,7 +72,7 @@ export const ParcelDetailPanel = ({ pallet, onClose }: ParcelDetailPanelProps) =
     );
 };
 
-function Row({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function Row({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
     return (
         <div className="flex items-center justify-between gap-2 text-xs">
             <span className="flex items-center gap-1.5 text-slate-500">

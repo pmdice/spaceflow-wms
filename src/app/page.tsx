@@ -12,6 +12,7 @@ import {
     Maximize,
     Minimize,
     PackageCheck,
+    type LucideIcon,
 } from 'lucide-react';
 import {
     Card,
@@ -197,7 +198,7 @@ export default function DashboardPage() {
     );
 }
 
-function HeaderKPIChip({ label, value, icon: Icon, alert = false }: { label: string, value: string | number, icon: any, alert?: boolean }) {
+function HeaderKPIChip({ label, value, icon: Icon, alert = false }: { label: string, value: string | number, icon: LucideIcon, alert?: boolean }) {
     return (
         <div className={cn(
             "flex items-center gap-2 rounded-xl border px-3 py-2 backdrop-blur-md",
