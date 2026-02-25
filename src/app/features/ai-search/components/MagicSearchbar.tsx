@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 export const MagicSearchbar = () => {
     const [prompt, setPrompt] = useState('');
     const [isSearching, setIsSearching] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const applyAIFilter = useLogisticsStore((state) => state.applyAIFilter);
     const resetFilter = useLogisticsStore((state) => state.resetFilter);
@@ -18,6 +19,7 @@ export const MagicSearchbar = () => {
         if (!prompt.trim()) return;
 
         setIsSearching(true);
+        setSubmitError(null);
 
         try {
             const response = await fetch('/api/parse-intent', {
@@ -27,7 +29,8 @@ export const MagicSearchbar = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Netzwerk- oder API-Fehler');
+                const payload = await response.json().catch(() => null) as { error?: string } | null;
+                throw new Error(payload?.error ?? 'The AI filter request failed.');
             }
 
             const data = await response.json();
@@ -37,6 +40,7 @@ export const MagicSearchbar = () => {
             }
         } catch (error) {
             console.error("Fehler bei der Intent-Erkennung:", error);
+            setSubmitError(error instanceof Error ? error.message : 'The AI filter request failed.');
         } finally {
             setIsSearching(false);
         }
@@ -44,6 +48,7 @@ export const MagicSearchbar = () => {
 
     const handleClear = () => {
         setPrompt('');
+        setSubmitError(null);
         resetFilter();
     };
 
@@ -92,6 +97,11 @@ export const MagicSearchbar = () => {
                     )}
                 </div>
             </form>
+            {submitError && (
+                <p className="mt-2 px-1 text-xs font-medium text-red-700">
+                    {submitError}
+                </p>
+            )}
         </div>
     );
 };
