@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SpaceFlow WMS
 
-## Getting Started
+SpaceFlow WMS is a portfolio-grade Warehouse Management System dashboard built with Next.js App Router.  
+It demonstrates how natural-language search can be translated into typed logistics filters and applied consistently across a 2D data grid and a 3D warehouse view.
 
-First, run the development server:
+![SpaceFlow Interface](docs/screenshot.png)
+
+## Overview
+
+Traditional WMS interfaces often require users to navigate deep, multi-step filtering workflows.  
+SpaceFlow introduces a constrained AI-assisted search flow that converts natural language into structured filter objects and applies them to operational data in real time.
+
+## Architecture
+
+### Backend-for-Frontend API
+
+- User input is sent to `POST /api/parse-intent`.
+- The route validates request shape and size before processing.
+- OpenAI Structured Outputs and Zod enforce deterministic JSON contracts.
+- The frontend only consumes server-validated filter objects.
+
+### State and UI Composition
+
+- `zustand` is used as the application state boundary for pallets, filters, and selection state.
+- The table, 3D scene, and overlay components are decoupled and react to shared state updates.
+- This keeps component responsibilities clear and avoids unnecessary synchronization logic.
+
+### Performance Strategy
+
+- 3D warehouse primitives use `THREE.InstancedMesh` to reduce draw calls.
+- The tabular view uses virtualization via `@tanstack/react-virtual`.
+- This combination supports large datasets while preserving interactive frame rates and DOM performance.
+
+## Security
+
+Security controls are documented in detail in [`SECURITY.md`](SECURITY.md).  
+Current controls include:
+
+- Global HTTP security headers, including CSP.
+- API payload and input hardening for LLM-facing routes.
+- Edge middleware routing controls for API and admin paths.
+- OWASP Top 10 (2021) mapping for interview and review traceability.
+
+## Technology Stack
+
+- Next.js (App Router, Route Handlers, Middleware)
+- React + TypeScript
+- Three.js, React Three Fiber, `@react-three/drei`
+- Zustand
+- Tailwind CSS + shadcn/ui
+- OpenAI SDK + Zod
+- `@tanstack/react-virtual`
+
+## Local Development
+
+### Prerequisites
+
+- Node.js 18+ (or current LTS)
+- npm
+
+### Setup
+
+```bash
+npm install
+```
+
+### Environment
+
+Create a `.env.local` file with required variables:
+
+```bash
+OPENAI_API_KEY=your_key_here
+```
+
+### Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Notes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- This repository is intentionally scoped as an interview-ready reference implementation.
+- The focus is system design clarity, secure defaults, and performance-conscious frontend engineering.
