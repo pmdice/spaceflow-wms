@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
-import { LogisticsFilterSchema } from '@/types/wms';
+import { LogisticsIntentSchema } from '@/types/wms';
 
 // Ensure this route runs in the Node.js runtime (OpenAI SDK compatibility)
 export const runtime = 'nodejs';
@@ -43,23 +43,49 @@ export async function POST(request: Request) {
             messages: [
                 {
                     role: 'system',
-                    content: `Du bist ein KI-Assistent für das "SpaceFlow" Warehouse Management System. 
-Dein Ziel ist es, die natürliche Sprache eines Logistikers in exakte Filter-Parameter für unsere Datenbank zu übersetzen.
-Wenn der User keinen spezifischen Wert für ein Feld nennt, setze es auf 'all' oder null, je nach Schema.
-Interpretiere Gewichtsangaben immer in kg:
-- "unter / kleiner als Xkg" => weightMaxKg = X
-- "über / größer als Xkg" => weightMinKg = X
-- "zwischen X und Y kg" => weightMinKg = X und weightMaxKg = Y
-Wenn kein Gewicht erwähnt wird: weightMinKg = null und weightMaxKg = null.
-Wandle Farbwünsche in saubere Hex-Codes um (z.B. rot -> #ef4444, grün -> #22c55e, blau -> #3b82f6).
-Beispiel-Input: "Zeig mir alle überfälligen Lieferungen für Zürich und markiere sie rot."`,
+                    content: `Du bist ein KI-Assistent für das "SpaceFlow" Warehouse Management System.
+Du musst natürliche Sprache in ein strukturiertes Intent-Objekt übersetzen.
+
+intentType Regeln:
+- intentType="filter": wenn der User nur anzeigen/filtern/hervorheben will.
+- intentType="action": wenn der User eine operative Änderung auslösen will (z.B. scan, relocate, pick, load, putaway, receive, delay, set_destination).
+
+Bei intentType="action":
+- action MUSS gesetzt sein.
+- filter beschreibt die Zielgruppe der Paletten.
+- maxTargets: sinnvolle Anzahl 1-20, default 10 bei unklaren Fällen.
+- targetPalletId optional für eine konkrete Palette (z.B. "PAL-00001").
+- targetZone optional bei Umlagerungen in eine spezifische Zone (A/B/C).
+- targetDestination optional bei Zieländerungen.
+
+Bei intentType="filter":
+- action = null.
+- maxTargets = 10.
+- targetPalletId/targetZone/targetDestination = null.
+
+Filter-Regeln:
+- Wenn ein Feld nicht genannt wird: palletId = null, status/urgencyLevel = "all", destination = null, weightMinKg/weightMaxKg = null.
+- Wenn der User eine konkrete Paletten-ID nennt (z.B. "PAL-00001"), setze filter.palletId.
+- Gewichte immer in kg:
+  - "unter Xkg" => weightMaxKg = X
+  - "über Xkg" => weightMinKg = X
+  - "zwischen X und Y kg" => weightMinKg = X, weightMaxKg = Y
+- Farben als Hex-Code normalisieren (z.B. rot -> #ef4444).
+
+Beispiele:
+- "Show me PAL-00001." => intentType filter + filter.palletId = "PAL-00001"
+- "Zeig mir alle überfälligen Lieferungen für Zürich und markiere sie rot." => intentType filter
+- "Relocate alle delayed Paletten in Bern." => intentType action + action relocate
+- "Scanne die schweren Zürcher Paletten." => intentType action + action scan
+- "Move PAL-00001 to zone C." => intentType action + action relocate + targetPalletId + targetZone
+- "Change PAL-00002 destination to Bern." => intentType action + action set_destination + targetPalletId + targetDestination`,
                 },
                 {
                     role: 'user',
                     content: prompt,
                 },
             ],
-            response_format: zodResponseFormat(LogisticsFilterSchema, 'logistics_filter'),
+            response_format: zodResponseFormat(LogisticsIntentSchema, 'logistics_intent'),
             temperature: 0.1,
         });
 
@@ -68,16 +94,28 @@ Beispiel-Input: "Zeig mir alle überfälligen Lieferungen für Zürich und marki
             throw new Error('OpenAI hat keinen Inhalt zurückgegeben.');
         }
 
-        let parsedFilter: unknown;
+        let parsedIntent: unknown;
         try {
-            parsedFilter = JSON.parse(content);
+            parsedIntent = JSON.parse(content);
         } catch {
             throw new Error('OpenAI hat kein gültiges JSON zurückgegeben.');
         }
 
-        const safeData = LogisticsFilterSchema.parse(parsedFilter);
+        const safeData = LogisticsIntentSchema.parse(parsedIntent);
+        if (safeData.intentType === 'action' && !safeData.action) {
+            throw new Error('Action intent must include an action.');
+        }
+        if (safeData.intentType === 'filter' && safeData.action !== null) {
+            throw new Error('Filter intent must not include an action.');
+        }
+        if (safeData.intentType === 'filter' && (safeData.targetPalletId || safeData.targetZone || safeData.targetDestination)) {
+            throw new Error('Filter intent must not include action targeting fields.');
+        }
+        if (safeData.intentType === 'action' && safeData.action === 'set_destination' && !safeData.targetDestination) {
+            throw new Error('Destination action requires targetDestination.');
+        }
 
-        return NextResponse.json({ filter: safeData });
+        return NextResponse.json({ intent: safeData });
     } catch (error: unknown) {
         console.error('BFF Parse Intent Error:', error);
 
