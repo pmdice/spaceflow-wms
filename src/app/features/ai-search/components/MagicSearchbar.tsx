@@ -73,8 +73,8 @@ export const MagicSearchbar = () => {
                         overrides,
                     );
                     if (result.applied && previous) {
-                        toast.success(`${formatActionLabel(data.intent.action)} applied`, {
-                            description: `${data.intent.targetPalletId} updated via AI command.`,
+                        toast.success(getSingleActionToastTitle(data.intent.action, data.intent.targetPalletId), {
+                            description: getSingleActionToastDescription(data.intent.action, new Date()),
                             action: {
                                 label: 'Undo',
                                 onClick: () => restorePalletState([previous], result.eventIds),
@@ -93,8 +93,8 @@ export const MagicSearchbar = () => {
                         overrides,
                     );
                     if (result.affected > 0) {
-                        toast.success(`${formatActionLabel(data.intent.action)} applied`, {
-                            description: `${result.affected} pallets updated via AI command.`,
+                        toast.success(getBulkActionToastTitle(data.intent.action, result.affected), {
+                            description: getBulkActionToastDescription(data.intent.action, new Date()),
                             action: {
                                 label: 'Undo',
                                 onClick: () => restorePalletState(previous, result.eventIds),
@@ -186,4 +186,36 @@ function formatActionLabel(action: PalletAction): string {
         default:
             return action.charAt(0).toUpperCase() + action.slice(1);
     }
+}
+
+function getSingleActionToastTitle(action: PalletAction, palletId: string): string {
+    if (action === 'scan') {
+        return `Scanned ${palletId}`;
+    }
+    return `${formatActionLabel(action)} applied`;
+}
+
+function getSingleActionToastDescription(action: PalletAction, at: Date): string {
+    if (action === 'scan') {
+        return `Updated to ${formatTime(at)}.`;
+    }
+    return 'Single pallet updated via AI command.';
+}
+
+function getBulkActionToastTitle(action: PalletAction, affected: number): string {
+    if (action === 'scan') {
+        return `Scanned ${affected} pallet${affected === 1 ? '' : 's'}`;
+    }
+    return `${formatActionLabel(action)} applied`;
+}
+
+function getBulkActionToastDescription(action: PalletAction, at: Date): string {
+    if (action === 'scan') {
+        return `Updated to ${formatTime(at)}.`;
+    }
+    return 'Multiple pallets updated via AI command.';
+}
+
+function formatTime(date: Date): string {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
