@@ -104,6 +104,7 @@ Beispiele:
         }
 
         const safeData = LogisticsIntentSchema.parse(parsedIntent);
+        applyPromptFallbacks(safeData, prompt);
         if (safeData.intentType === 'action' && !safeData.action) {
             throw new Error('Action intent must include an action.');
         }
@@ -145,5 +146,41 @@ Beispiele:
             { error: 'Interner Server Fehler bei der Intent-Erkennung.' },
             { status: 500 }
         );
+    }
+}
+
+function applyPromptFallbacks(
+    intent: z.infer<typeof LogisticsIntentSchema>,
+    prompt: string,
+) {
+    const text = prompt.toLowerCase();
+
+    // Keep intent robust for common operational phrasing if model output is too generic.
+    if (intent.filter.urgencyLevel === 'all') {
+        if (/\bhigh\s+urgency\b|\burgent\b|\bhoch\b|\bdringend\b/.test(text)) {
+            intent.filter.urgencyLevel = 'high';
+        } else if (/\bmedium\s+urgency\b|\bmittel\b/.test(text)) {
+            intent.filter.urgencyLevel = 'medium';
+        } else if (/\blow\s+urgency\b|\bniedrig\b/.test(text)) {
+            intent.filter.urgencyLevel = 'low';
+        }
+    }
+
+    if (intent.filter.status === 'all') {
+        if (/\bdelayed\b|\boverdue\b|\büberfällig\b/.test(text)) {
+            intent.filter.status = 'delayed';
+        } else if (/\bstored\b|\blager\b/.test(text)) {
+            intent.filter.status = 'stored';
+        } else if (/\btransit\b|\bin transit\b/.test(text)) {
+            intent.filter.status = 'transit';
+        }
+    }
+
+    // Guard against model drift for explicit scan commands.
+    if (intent.intentType === 'action' && /\bscan\b|\bscanne\b/.test(text)) {
+        intent.action = 'scan';
+        intent.targetZone = null;
+        intent.targetStatus = null;
+        intent.targetDestination = null;
     }
 }
