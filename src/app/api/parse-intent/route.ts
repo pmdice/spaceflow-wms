@@ -48,7 +48,7 @@ Du musst natürliche Sprache in ein strukturiertes Intent-Objekt übersetzen.
 
 intentType Regeln:
 - intentType="filter": wenn der User nur anzeigen/filtern/hervorheben will.
-- intentType="action": wenn der User eine operative Änderung auslösen will (z.B. scan, relocate, pick, load, putaway, receive, delay, set_destination).
+- intentType="action": wenn der User eine operative Änderung auslösen will (z.B. scan, relocate, pick, load, putaway, receive, delay, set_status, set_destination).
 
 Bei intentType="action":
 - action MUSS gesetzt sein.
@@ -56,12 +56,13 @@ Bei intentType="action":
 - maxTargets: sinnvolle Anzahl 1-20, default 10 bei unklaren Fällen.
 - targetPalletId optional für eine konkrete Palette (z.B. "PAL-00001").
 - targetZone optional bei Umlagerungen in eine spezifische Zone (A/B/C).
+- targetStatus optional bei Statusänderungen (stored/transit/delayed).
 - targetDestination optional bei Zieländerungen.
 
 Bei intentType="filter":
 - action = null.
 - maxTargets = 10.
-- targetPalletId/targetZone/targetDestination = null.
+- targetPalletId/targetZone/targetStatus/targetDestination = null.
 
 Filter-Regeln:
 - Wenn ein Feld nicht genannt wird: palletId = null, status/urgencyLevel = "all", destination = null, weightMinKg/weightMaxKg = null.
@@ -78,6 +79,7 @@ Beispiele:
 - "Relocate alle delayed Paletten in Bern." => intentType action + action relocate
 - "Scanne die schweren Zürcher Paletten." => intentType action + action scan
 - "Move PAL-00001 to zone C." => intentType action + action relocate + targetPalletId + targetZone
+- "Change PAL-00001 status to stored." => intentType action + action set_status + targetPalletId + targetStatus
 - "Change PAL-00002 destination to Bern." => intentType action + action set_destination + targetPalletId + targetDestination`,
                 },
                 {
@@ -108,11 +110,24 @@ Beispiele:
         if (safeData.intentType === 'filter' && safeData.action !== null) {
             throw new Error('Filter intent must not include an action.');
         }
-        if (safeData.intentType === 'filter' && (safeData.targetPalletId || safeData.targetZone || safeData.targetDestination)) {
+        if (safeData.intentType === 'filter' && (safeData.targetPalletId || safeData.targetZone || safeData.targetStatus || safeData.targetDestination)) {
             throw new Error('Filter intent must not include action targeting fields.');
+        }
+        if (safeData.intentType === 'action' && safeData.action === 'set_status' && !safeData.targetStatus) {
+            throw new Error('Status action requires targetStatus.');
         }
         if (safeData.intentType === 'action' && safeData.action === 'set_destination' && !safeData.targetDestination) {
             throw new Error('Destination action requires targetDestination.');
+        }
+
+        // Safety normalization: if model confuses status updates as destination updates.
+        if (safeData.intentType === 'action' && safeData.action === 'set_destination' && safeData.targetDestination) {
+            const normalized = safeData.targetDestination.trim().toLowerCase();
+            if (normalized === 'stored' || normalized === 'transit' || normalized === 'delayed') {
+                safeData.action = 'set_status';
+                safeData.targetStatus = normalized;
+                safeData.targetDestination = null;
+            }
         }
 
         return NextResponse.json({ intent: safeData });
