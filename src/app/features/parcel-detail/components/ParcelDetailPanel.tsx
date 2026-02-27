@@ -1,6 +1,6 @@
 'use client';
 
-import type { SpatialPallet } from '@/types/wms';
+import type { PalletEvent, SpatialPallet } from '@/types/wms';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import { X, Package2, MapPin, Weight, Clock3, ShieldCheck, type LucideIcon } fro
 
 type ParcelDetailPanelProps = {
     pallet: SpatialPallet | null;
+    events: PalletEvent[];
     onClose: () => void;
 };
 
@@ -23,7 +24,9 @@ const getRecommendedAction = (pallet: SpatialPallet) => {
     return 'No exception. Keep in storage until release.';
 };
 
-export const ParcelDetailPanel = ({ pallet, onClose }: ParcelDetailPanelProps) => {
+export const ParcelDetailPanel = ({ pallet, events, onClose }: ParcelDetailPanelProps) => {
+    const recentEvents = events.slice(0, 4);
+
     return (
         <aside className={cn(
             'absolute top-20 right-6 z-40 w-[320px] rounded-2xl border border-white/60 bg-white/88',
@@ -66,11 +69,39 @@ export const ParcelDetailPanel = ({ pallet, onClose }: ParcelDetailPanelProps) =
                         </p>
                         <p className="text-xs text-slate-700">{getRecommendedAction(pallet)}</p>
                     </div>
+
+                    <div className="mt-3 rounded-xl border border-slate-200/80 bg-white/85 p-3">
+                        <p className="mb-2 text-[10px] uppercase tracking-[0.14em] font-semibold text-slate-500">Lifecycle Events</p>
+                        <div className="space-y-1.5">
+                            {recentEvents.length ? recentEvents.map((event) => (
+                                <div key={event.id} className="rounded-lg bg-slate-50 px-2 py-1.5 text-[11px] text-slate-700">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="font-semibold text-slate-800">{formatEventType(event.type)}</span>
+                                        <span className="text-slate-500">{new Date(event.at).toLocaleString()}</span>
+                                    </div>
+                                    <div className="mt-0.5 text-slate-500">
+                                        {event.actor} via {event.source}{event.note ? ` - ${event.note}` : ''}
+                                    </div>
+                                </div>
+                            )) : (
+                                <p className="text-xs text-slate-500">No events available.</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </aside>
     );
 };
+
+function formatEventType(eventType: PalletEvent['type']) {
+    switch (eventType) {
+        case 'delay_flagged':
+            return 'Delay Flagged';
+        default:
+            return eventType.charAt(0).toUpperCase() + eventType.slice(1);
+    }
+}
 
 function Row({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
     return (
