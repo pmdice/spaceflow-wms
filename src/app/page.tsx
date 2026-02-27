@@ -12,6 +12,8 @@ import {
     Maximize,
     Minimize,
     PackageCheck,
+    Github,
+    ExternalLink,
     type LucideIcon,
 } from 'lucide-react';
 import {
@@ -24,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 const BASE_LIST_PANEL_HEIGHT_DVH = 48;
+const REPOSITORY_URL = 'https://github.com/pmdice/spaceflow-wms';
 
 export default function DashboardPage() {
     const fetchData = useLogisticsStore((state) => state.fetchData);
@@ -75,7 +78,6 @@ export default function DashboardPage() {
 
     return (
         <SidebarInset className="relative h-dvh bg-[#F4F4F5] overflow-hidden font-sans flex flex-col">
-
             <div className={cn(
                 "absolute inset-0 z-0 transition-opacity duration-700 ease-in-out",
                 is3DInteractive ? "pointer-events-auto opacity-100" : "pointer-events-auto opacity-80"
@@ -90,7 +92,7 @@ export default function DashboardPage() {
             <div className="relative z-10 flex flex-col h-full overflow-hidden pointer-events-none">
 
                 <header className={cn(
-                    "flex h-16 shrink-0 items-center justify-between px-6 pointer-events-auto bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm z-20 transition-all duration-500",
+                    "relative flex h-16 shrink-0 items-center justify-between px-6 pointer-events-auto bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm z-20 transition-all duration-500",
                     is3DInteractive ? "translate-y-[-100%] opacity-0" : "translate-y-0 opacity-100"
                 )}>
                     <div className="flex items-center gap-4">
@@ -102,6 +104,27 @@ export default function DashboardPage() {
                                 SpaceFlow <span className="font-light text-gray-500 ml-1">| Terminal A</span>
                             </h1>
                         </div>
+                    </div>
+
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
+                        <Button
+                            asChild
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 gap-2 bg-gray-900/88 text-white hover:bg-gray-900 border border-white/10 backdrop-blur-md shadow-[0_12px_28px_rgba(15,23,42,0.28)]"
+                        >
+                            <a
+                                href={REPOSITORY_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Open project repository on GitHub"
+                                title="View project repository"
+                            >
+                                <Github className="size-4" />
+                                <span className="text-xs font-semibold tracking-wide">View Code</span>
+                                <ExternalLink className="size-3.5 opacity-80" />
+                            </a>
+                        </Button>
                     </div>
 
                     <div className="flex items-center gap-2">
