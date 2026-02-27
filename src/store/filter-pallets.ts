@@ -2,6 +2,10 @@ import type { LogisticsFilter, SpatialPallet } from '../types/wms';
 
 export function filterPallets(pallets: SpatialPallet[], filter: LogisticsFilter): SpatialPallet[] {
     return pallets.filter((pallet) => {
+        if (filter.palletId && !pallet.id.toLowerCase().includes(filter.palletId.toLowerCase())) {
+            return false;
+        }
+
         if (filter.destination && !pallet.destination.toLowerCase().includes(filter.destination.toLowerCase())) {
             return false;
         }

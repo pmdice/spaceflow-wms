@@ -34,6 +34,7 @@ const pallets: SpatialPallet[] = [
 
 function makeFilter(overrides: Partial<LogisticsFilter>): LogisticsFilter {
     return {
+        palletId: null,
         destination: null,
         status: 'all',
         urgencyLevel: 'all',
@@ -64,5 +65,10 @@ describe('filterPallets', () => {
             makeFilter({ weightMinKg: 200, weightMaxKg: 400 }),
         );
         expect(result.map((item) => item.id)).toEqual(['P-003']);
+    });
+
+    it('filters by pallet id', () => {
+        const result = filterPallets(pallets, makeFilter({ palletId: 'p-002' }));
+        expect(result.map((item) => item.id)).toEqual(['P-002']);
     });
 });
