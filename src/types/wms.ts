@@ -63,6 +63,7 @@ export const PalletActionSchema = z.enum([
     'pick',
     'load',
     'delay',
+    'set_status',
     'set_destination',
 ]);
 
@@ -75,6 +76,7 @@ export const LogisticsIntentSchema = z.object({
     maxTargets: z.number().int().min(1).max(50).default(10),
     targetPalletId: z.string().nullable().default(null),
     targetZone: z.enum(['A', 'B', 'C']).nullable().default(null),
+    targetStatus: z.enum(['stored', 'transit', 'delayed']).nullable().default(null),
     targetDestination: z.string().nullable().default(null),
 });
 

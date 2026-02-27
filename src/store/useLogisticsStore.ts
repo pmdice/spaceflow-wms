@@ -6,6 +6,7 @@ import { WAREHOUSE_CONFIG } from '@/lib/constants';
 
 type ActionOverrides = {
     targetZone?: 'A' | 'B' | 'C' | null;
+    targetStatus?: 'stored' | 'transit' | 'delayed' | null;
     targetDestination?: string | null;
 };
 
