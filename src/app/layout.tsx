@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { Toaster } from "@/components/ui/sonner"
 
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar/index"
@@ -50,7 +51,10 @@ export default function RootLayout({
       >
       <SidebarProvider>
         <AppSidebar />
-        <TooltipProvider>{children}</TooltipProvider>
+        <TooltipProvider>
+          {children}
+          <Toaster closeButton position="bottom-right" />
+        </TooltipProvider>
       </SidebarProvider>
       </body>
     </html>

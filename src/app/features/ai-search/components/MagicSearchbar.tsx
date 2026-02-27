@@ -5,16 +5,18 @@ import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { Loader2, Sparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PalletAction } from '@/types/wms';
+import { toast } from 'sonner';
+import { filterPallets } from '@/store/filter-pallets';
 
 export const MagicSearchbar = () => {
     const [prompt, setPrompt] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
-    const [submitInfo, setSubmitInfo] = useState<string | null>(null);
 
     const applyAIFilter = useLogisticsStore((state) => state.applyAIFilter);
     const applyPalletAction = useLogisticsStore((state) => state.applyPalletAction);
     const applyBulkPalletAction = useLogisticsStore((state) => state.applyBulkPalletAction);
+    const restorePalletState = useLogisticsStore((state) => state.restorePalletState);
     const resetFilter = useLogisticsStore((state) => state.resetFilter);
     const isFiltered = useLogisticsStore((state) => state.pallets.length !== state.filteredPallets.length);
 
@@ -24,7 +26,6 @@ export const MagicSearchbar = () => {
 
         setIsSearching(true);
         setSubmitError(null);
-        setSubmitInfo(null);
 
         try {
             const response = await fetch('/api/parse-intent', {
@@ -46,6 +47,7 @@ export const MagicSearchbar = () => {
                     maxTargets: number;
                     targetPalletId: string | null;
                     targetZone: 'A' | 'B' | 'C' | null;
+                    targetStatus: 'stored' | 'transit' | 'delayed' | null;
                     targetDestination: string | null;
                 };
             };
@@ -55,36 +57,52 @@ export const MagicSearchbar = () => {
 
             if (data.intent.intentType === 'filter') {
                 applyAIFilter(data.intent.filter);
-                setSubmitInfo('Filter updated.');
             } else if (data.intent.action) {
+                const beforeState = useLogisticsStore.getState();
                 const overrides = {
                     targetZone: data.intent.targetZone,
+                    targetStatus: data.intent.targetStatus,
                     targetDestination: data.intent.targetDestination,
                 };
 
                 if (data.intent.targetPalletId) {
-                    const applied = applyPalletAction(
+                    const previous = beforeState.pallets.find((item) => item.id === data.intent?.targetPalletId);
+                    const result = applyPalletAction(
                         data.intent.targetPalletId,
                         data.intent.action,
                         overrides,
                     );
-                    setSubmitInfo(
-                        applied
-                            ? `${formatActionLabel(data.intent.action)} applied to ${data.intent.targetPalletId}.`
-                            : `Pallet ${data.intent.targetPalletId} not found.`,
-                    );
+                    if (result.applied && previous) {
+                        toast.success(`${formatActionLabel(data.intent.action)} applied`, {
+                            description: `${data.intent.targetPalletId} updated via AI command.`,
+                            action: {
+                                label: 'Undo',
+                                onClick: () => restorePalletState([previous], result.eventIds),
+                            },
+                        });
+                    } else if (!result.applied) {
+                        setSubmitError(`Pallet ${data.intent.targetPalletId} not found.`);
+                    }
                 } else {
-                    const affected = applyBulkPalletAction(
+                    const targets = filterPallets(beforeState.pallets, data.intent.filter).slice(0, Math.max(1, Math.min(50, data.intent.maxTargets)));
+                    const previous = targets.map((target) => ({ ...target, logicalAddress: { ...target.logicalAddress } }));
+                    const result = applyBulkPalletAction(
                         data.intent.action,
                         data.intent.filter,
                         data.intent.maxTargets,
                         overrides,
                     );
-                    setSubmitInfo(
-                        affected > 0
-                            ? `${formatActionLabel(data.intent.action)} applied to ${affected} pallet${affected === 1 ? '' : 's'}.`
-                            : 'No matching pallets found for this action.',
-                    );
+                    if (result.affected > 0) {
+                        toast.success(`${formatActionLabel(data.intent.action)} applied`, {
+                            description: `${result.affected} pallets updated via AI command.`,
+                            action: {
+                                label: 'Undo',
+                                onClick: () => restorePalletState(previous, result.eventIds),
+                            },
+                        });
+                    } else {
+                        setSubmitError('No matching pallets found for this action.');
+                    }
                 }
             }
         } catch (error) {
@@ -98,7 +116,6 @@ export const MagicSearchbar = () => {
     const handleClear = () => {
         setPrompt('');
         setSubmitError(null);
-        setSubmitInfo(null);
         resetFilter();
     };
 
@@ -150,11 +167,6 @@ export const MagicSearchbar = () => {
             {submitError && (
                 <p className="mt-2 px-1 text-xs font-medium text-red-700">
                     {submitError}
-                </p>
-            )}
-            {submitInfo && !submitError && (
-                <p className="mt-2 px-1 text-xs font-medium text-slate-700">
-                    {submitInfo}
                 </p>
             )}
         </div>
