@@ -1,10 +1,13 @@
 import { create } from 'zustand';
-import type { SpatialPallet, LogisticsFilter, PalletEvent, StorageLocation } from '@/types/wms';
+import type { SpatialPallet, LogisticsFilter, PalletEvent, StorageLocation, PalletAction } from '@/types/wms';
 import { filterPallets } from './filter-pallets';
 import { buildPalletEvents } from '@/lib/pallet-events';
 import { WAREHOUSE_CONFIG } from '@/lib/constants';
 
-type PalletAction = 'receive' | 'putaway' | 'scan' | 'relocate' | 'pick' | 'load' | 'delay';
+type ActionOverrides = {
+    targetZone?: 'A' | 'B' | 'C' | null;
+    targetDestination?: string | null;
+};
 
 interface LogisticsState {
     pallets: SpatialPallet[];
@@ -24,7 +27,8 @@ interface LogisticsState {
     fetchData: () => Promise<void>;
     applyAIFilter: (filter: LogisticsFilter) => void;
     resetFilter: () => void;
-    applyPalletAction: (palletId: string, action: PalletAction) => void;
+    applyPalletAction: (palletId: string, action: PalletAction, overrides?: ActionOverrides) => boolean;
+    applyBulkPalletAction: (action: PalletAction, filter: LogisticsFilter, maxTargets: number, overrides?: ActionOverrides) => number;
     simulateTick: () => void;
     startSimulation: () => void;
     stopSimulation: () => void;
@@ -90,13 +94,13 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
         });
     },
 
-    applyPalletAction: (palletId, action) => {
+    applyPalletAction: (palletId, action, overrides) => {
         const state = get();
         const pallet = state.pallets.find((item) => item.id === palletId);
-        if (!pallet) return;
+        if (!pallet) return false;
 
         const timestamp = new Date().toISOString();
-        const updatedPallet = mutatePalletForAction(pallet, action, timestamp, state.pallets);
+        const updatedPallet = mutatePalletForAction(pallet, action, timestamp, state.pallets, overrides);
         const event = makeActionEvent(updatedPallet.id, action, timestamp);
 
         const updatedPallets = state.pallets.map((item) => (item.id === palletId ? updatedPallet : item));
@@ -110,6 +114,40 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
             palletEvents: [event, ...state.palletEvents],
             filterRevision: state.filterRevision + 1,
         });
+        return true;
+    },
+
+    applyBulkPalletAction: (action, filter, maxTargets, overrides) => {
+        const state = get();
+        const candidates = filterPallets(state.pallets, filter);
+        if (candidates.length === 0) return 0;
+
+        const safeLimit = Math.max(1, Math.min(50, maxTargets));
+        const targets = candidates.slice(0, safeLimit);
+        const timestamp = new Date().toISOString();
+
+        let workingPallets = [...state.pallets];
+        targets.forEach((target) => {
+            const current = workingPallets.find((item) => item.id === target.id);
+            if (!current) return;
+            const updated = mutatePalletForAction(current, action, timestamp, workingPallets, overrides);
+            workingPallets = workingPallets.map((item) => (item.id === target.id ? updated : item));
+        });
+        const updatedPallets = workingPallets;
+
+        const events = targets.map((item) => makeActionEvent(item.id, action, timestamp));
+        const updatedFiltered = state.activeFilter
+            ? filterPallets(updatedPallets, state.activeFilter)
+            : updatedPallets;
+
+        set({
+            pallets: updatedPallets,
+            filteredPallets: updatedFiltered,
+            palletEvents: [...events, ...state.palletEvents],
+            filterRevision: state.filterRevision + 1,
+        });
+
+        return targets.length;
     },
 
     simulateTick: () => {
@@ -161,14 +199,19 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
     setSelectedPalletId: (id) => set({ selectedPalletId: id }),
 }));
 
-function relocatePallet(pallet: SpatialPallet, allPallets: SpatialPallet[]): SpatialPallet {
+function relocatePallet(
+    pallet: SpatialPallet,
+    allPallets: SpatialPallet[],
+    targetZone?: 'A' | 'B' | 'C' | null,
+): SpatialPallet {
+    const zone = targetZone ?? normalizeZone(pallet.logicalAddress.zone);
     const occupied = new Set(
         allPallets
             .filter((item) => item.id !== pallet.id)
             .map((item) => physicalSlotKey(item.logicalAddress)),
     );
 
-    const nextLocation = findNextFreeLocation(pallet.logicalAddress, occupied);
+    const nextLocation = findNextFreeLocation({ ...pallet.logicalAddress, zone }, occupied);
     if (!nextLocation) {
         return pallet;
     }
@@ -196,7 +239,7 @@ function findNextFreeLocation(current: StorageLocation, occupied: Set<string>): 
     for (let step = 1; step <= totalSlots; step += 1) {
         const idx = (start + step) % totalSlots;
         const slot = fromIndex(idx);
-        const physicalKey = `${slot.aisle}-${slot.bay}-${slot.level}`;
+        const physicalKey = `${current.zone}-${slot.aisle}-${slot.bay}-${slot.level}`;
         if (!occupied.has(physicalKey)) {
             const id = formatLocationId(current.zone, slot.aisle, slot.bay, slot.level);
             return {
@@ -213,7 +256,7 @@ function findNextFreeLocation(current: StorageLocation, occupied: Set<string>): 
 }
 
 function physicalSlotKey(location: StorageLocation): string {
-    return `${location.aisle}-${location.bay}-${location.level}`;
+    return `${location.zone}-${location.aisle}-${location.bay}-${location.level}`;
 }
 
 function formatLocationId(zone: string, aisle: number, bay: number, level: number): string {
@@ -226,6 +269,7 @@ function mutatePalletForAction(
     action: PalletAction,
     timestamp: string,
     allPallets: SpatialPallet[],
+    overrides?: ActionOverrides,
 ): SpatialPallet {
     const next = { ...pallet, lastScannedAt: timestamp };
     switch (action) {
@@ -238,7 +282,12 @@ function mutatePalletForAction(
         case 'delay':
             return { ...next, status: 'delayed', urgency: 'high' };
         case 'relocate':
-            return relocatePallet(next, allPallets);
+            return relocatePallet(next, allPallets, overrides?.targetZone ?? null);
+        case 'set_destination':
+            return {
+                ...next,
+                destination: normalizeDestination(overrides?.targetDestination ?? next.destination),
+            };
         case 'scan':
         default:
             return next;
@@ -254,6 +303,7 @@ function makeActionEvent(palletId: string, action: PalletAction, timestamp: stri
         pick: { type: 'picked', actor: 'Wave-Picker', source: 'operator' },
         load: { type: 'loaded', actor: 'Dock-Load', source: 'scanner' },
         delay: { type: 'delay_flagged', actor: 'Rule-Engine', source: 'system', note: 'Operational delay detected' },
+        set_destination: { type: 'scan', actor: 'Ops-Console', source: 'operator', note: 'Destination updated' },
     };
 
     const meta = actionMeta[action];
@@ -266,4 +316,16 @@ function makeActionEvent(palletId: string, action: PalletAction, timestamp: stri
         source: meta.source,
         note: meta.note,
     };
+}
+
+function normalizeZone(zone: string): 'A' | 'B' | 'C' {
+    const upper = zone.toUpperCase();
+    if (upper === 'B' || upper === 'C') return upper;
+    return 'A';
+}
+
+function normalizeDestination(destination: string): string {
+    const value = destination.trim();
+    if (!value) return destination;
+    return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
