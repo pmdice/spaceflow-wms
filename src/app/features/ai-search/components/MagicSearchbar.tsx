@@ -181,6 +181,8 @@ function formatActionLabel(action: PalletAction): string {
             return 'Putaway';
         case 'set_destination':
             return 'Destination update';
+        case 'set_status':
+            return 'Status update';
         default:
             return action.charAt(0).toUpperCase() + action.slice(1);
     }
