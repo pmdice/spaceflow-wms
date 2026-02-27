@@ -27,8 +27,9 @@ interface LogisticsState {
     fetchData: () => Promise<void>;
     applyAIFilter: (filter: LogisticsFilter) => void;
     resetFilter: () => void;
-    applyPalletAction: (palletId: string, action: PalletAction, overrides?: ActionOverrides) => boolean;
-    applyBulkPalletAction: (action: PalletAction, filter: LogisticsFilter, maxTargets: number, overrides?: ActionOverrides) => number;
+    applyPalletAction: (palletId: string, action: PalletAction, overrides?: ActionOverrides) => { applied: boolean; eventIds: string[] };
+    applyBulkPalletAction: (action: PalletAction, filter: LogisticsFilter, maxTargets: number, overrides?: ActionOverrides) => { affected: number; targetIds: string[]; eventIds: string[] };
+    restorePalletState: (previousPallets: SpatialPallet[], eventIdsToRemove: string[]) => void;
     simulateTick: () => void;
     startSimulation: () => void;
     stopSimulation: () => void;
@@ -97,7 +98,7 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
     applyPalletAction: (palletId, action, overrides) => {
         const state = get();
         const pallet = state.pallets.find((item) => item.id === palletId);
-        if (!pallet) return false;
+        if (!pallet) return { applied: false, eventIds: [] };
 
         const timestamp = new Date().toISOString();
         const updatedPallet = mutatePalletForAction(pallet, action, timestamp, state.pallets, overrides);
@@ -114,13 +115,13 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
             palletEvents: [event, ...state.palletEvents],
             filterRevision: state.filterRevision + 1,
         });
-        return true;
+        return { applied: true, eventIds: [event.id] };
     },
 
     applyBulkPalletAction: (action, filter, maxTargets, overrides) => {
         const state = get();
         const candidates = filterPallets(state.pallets, filter);
-        if (candidates.length === 0) return 0;
+        if (candidates.length === 0) return { affected: 0, targetIds: [], eventIds: [] };
 
         const safeLimit = Math.max(1, Math.min(50, maxTargets));
         const targets = candidates.slice(0, safeLimit);
@@ -147,7 +148,21 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
             filterRevision: state.filterRevision + 1,
         });
 
-        return targets.length;
+        return { affected: targets.length, targetIds: targets.map((item) => item.id), eventIds: events.map((event) => event.id) };
+    },
+
+    restorePalletState: (previousPallets, eventIdsToRemove) => {
+        const state = get();
+        const previousById = new Map(previousPallets.map((pallet) => [pallet.id, pallet]));
+        const restored = state.pallets.map((pallet) => previousById.get(pallet.id) ?? pallet);
+        const filtered = state.activeFilter ? filterPallets(restored, state.activeFilter) : restored;
+
+        set({
+            pallets: restored,
+            filteredPallets: filtered,
+            palletEvents: state.palletEvents.filter((event) => !eventIdsToRemove.includes(event.id)),
+            filterRevision: state.filterRevision + 1,
+        });
     },
 
     simulateTick: () => {
