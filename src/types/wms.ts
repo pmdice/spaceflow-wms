@@ -18,6 +18,25 @@ export interface SpatialPallet {
     logicalAddress: StorageLocation;
 }
 
+export type PalletEventType =
+    | 'received'
+    | 'putaway'
+    | 'scan'
+    | 'relocated'
+    | 'picked'
+    | 'loaded'
+    | 'delay_flagged';
+
+export interface PalletEvent {
+    id: string;
+    palletId: string;
+    type: PalletEventType;
+    at: string;
+    actor: string;
+    source: 'scanner' | 'operator' | 'system';
+    note?: string;
+}
+
 export const LogisticsFilterSchema = z.object({
     destination: z.string().nullable().describe("Die exakte Zielstadt (z.B. 'Zürich', 'Bern'). Null, wenn nicht erwähnt."),
     status: z.enum(['all', 'stored', 'transit', 'delayed'])
