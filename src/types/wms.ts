@@ -38,6 +38,8 @@ export interface PalletEvent {
 }
 
 export const LogisticsFilterSchema = z.object({
+    palletId: z.string().nullable()
+        .describe("Die konkrete Paletten-ID (z.B. 'PAL-00001') bei direkter Suche. Null, wenn nicht erwähnt."),
     destination: z.string().nullable().describe("Die exakte Zielstadt (z.B. 'Zürich', 'Bern'). Null, wenn nicht erwähnt."),
     status: z.enum(['all', 'stored', 'transit', 'delayed'])
         .describe("Der Status der Fracht. 'all', wenn nicht spezifisch gefragt."),
@@ -52,3 +54,28 @@ export const LogisticsFilterSchema = z.object({
 });
 
 export type LogisticsFilter = z.infer<typeof LogisticsFilterSchema>;
+
+export const PalletActionSchema = z.enum([
+    'receive',
+    'putaway',
+    'scan',
+    'relocate',
+    'pick',
+    'load',
+    'delay',
+    'set_destination',
+]);
+
+export type PalletAction = z.infer<typeof PalletActionSchema>;
+
+export const LogisticsIntentSchema = z.object({
+    intentType: z.enum(['filter', 'action']),
+    filter: LogisticsFilterSchema,
+    action: PalletActionSchema.nullable(),
+    maxTargets: z.number().int().min(1).max(50).default(10),
+    targetPalletId: z.string().nullable().default(null),
+    targetZone: z.enum(['A', 'B', 'C']).nullable().default(null),
+    targetDestination: z.string().nullable().default(null),
+});
+
+export type LogisticsIntent = z.infer<typeof LogisticsIntentSchema>;
