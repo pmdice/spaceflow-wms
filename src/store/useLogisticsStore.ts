@@ -304,6 +304,11 @@ function mutatePalletForAction(
                 ...next,
                 destination: normalizeDestination(overrides?.targetDestination ?? next.destination),
             };
+        case 'set_status':
+            return {
+                ...next,
+                status: overrides?.targetStatus ?? next.status,
+            };
         case 'scan':
         default:
             return next;
@@ -319,6 +324,7 @@ function makeActionEvent(palletId: string, action: PalletAction, timestamp: stri
         pick: { type: 'picked', actor: 'Wave-Picker', source: 'operator' },
         load: { type: 'loaded', actor: 'Dock-Load', source: 'scanner' },
         delay: { type: 'delay_flagged', actor: 'Rule-Engine', source: 'system', note: 'Operational delay detected' },
+        set_status: { type: 'scan', actor: 'Ops-Console', source: 'operator', note: 'Status updated' },
         set_destination: { type: 'scan', actor: 'Ops-Console', source: 'operator', note: 'Destination updated' },
     };
 
