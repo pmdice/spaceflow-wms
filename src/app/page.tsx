@@ -53,8 +53,10 @@ export default function DashboardPage() {
     const [isListExpanded, setIsListExpanded] = useState(false);
 
     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+        if (allPallets.length === 0) {
+            fetchData();
+        }
+    }, [fetchData, allPallets.length]);
 
     const toggleListExpanded = () => {
         setIsListExpanded((prev) => !prev);
