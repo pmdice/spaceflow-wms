@@ -165,7 +165,7 @@ function relocatePallet(pallet: SpatialPallet, allPallets: SpatialPallet[]): Spa
     const occupied = new Set(
         allPallets
             .filter((item) => item.id !== pallet.id)
-            .map((item) => item.logicalAddress.id),
+            .map((item) => physicalSlotKey(item.logicalAddress)),
     );
 
     const nextLocation = findNextFreeLocation(pallet.logicalAddress, occupied);
@@ -196,8 +196,9 @@ function findNextFreeLocation(current: StorageLocation, occupied: Set<string>): 
     for (let step = 1; step <= totalSlots; step += 1) {
         const idx = (start + step) % totalSlots;
         const slot = fromIndex(idx);
-        const id = formatLocationId(current.zone, slot.aisle, slot.bay, slot.level);
-        if (!occupied.has(id)) {
+        const physicalKey = `${slot.aisle}-${slot.bay}-${slot.level}`;
+        if (!occupied.has(physicalKey)) {
+            const id = formatLocationId(current.zone, slot.aisle, slot.bay, slot.level);
             return {
                 id,
                 zone: current.zone,
@@ -209,6 +210,10 @@ function findNextFreeLocation(current: StorageLocation, occupied: Set<string>): 
     }
 
     return null;
+}
+
+function physicalSlotKey(location: StorageLocation): string {
+    return `${location.aisle}-${location.bay}-${location.level}`;
 }
 
 function formatLocationId(zone: string, aisle: number, bay: number, level: number): string {
