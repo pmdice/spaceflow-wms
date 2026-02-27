@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SpatialPallet, LogisticsFilter, PalletEvent } from '../types/wms';
+import type { SpatialPallet, LogisticsFilter, PalletEvent } from '@/types/wms';
 import { filterPallets } from './filter-pallets';
 import { buildPalletEvents } from '@/lib/pallet-events';
 

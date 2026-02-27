@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calculateLogisticsKpis } from './logistics-kpis';
-import type { PalletEvent, SpatialPallet } from '../types/wms';
+import type { PalletEvent, SpatialPallet } from '@/types/wms';
 
 const pallets: SpatialPallet[] = [
     {
