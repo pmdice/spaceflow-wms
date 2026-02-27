@@ -105,6 +105,7 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false,
                     fadeDistance={50}
                     raycast={() => null}
                 />
+                <ZoneBands />
 
                 {/* Scene geometry */}
                 <ShelfInstances />
@@ -345,6 +346,37 @@ function CameraFocusController({
     });
 
     return null;
+}
+
+function ZoneBands() {
+    const zoneColors: Record<string, string> = {
+        A: '#dbeafe',
+        B: '#dcfce7',
+        C: '#fef3c7',
+    };
+
+    return (
+        <group>
+            {WAREHOUSE_CONFIG.ZONES.map((zone) => {
+                const left = calculate3DPosition({ id: '', zone, aisle: 1, bay: 1, level: 1 });
+                const right = calculate3DPosition({ id: '', zone, aisle: WAREHOUSE_CONFIG.AISLE_COUNT, bay: 1, level: 1 });
+                const front = calculate3DPosition({ id: '', zone, aisle: 1, bay: 1, level: 1 });
+                const back = calculate3DPosition({ id: '', zone, aisle: 1, bay: WAREHOUSE_CONFIG.BAYS_PER_AISLE, level: 1 });
+
+                const width = Math.abs(right.x - left.x) + (WAREHOUSE_CONFIG.AISLE_WIDTH + WAREHOUSE_CONFIG.SHELF_SIZE[2]);
+                const depth = Math.abs(back.z - front.z) + WAREHOUSE_CONFIG.BAY_WIDTH;
+                const centerX = (left.x + right.x) / 2;
+                const centerZ = (front.z + back.z) / 2;
+
+                return (
+                    <mesh key={zone} position={[centerX, -0.08, centerZ]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
+                        <planeGeometry args={[width, depth]} />
+                        <meshBasicMaterial color={zoneColors[zone] ?? '#e2e8f0'} transparent opacity={0.22} />
+                    </mesh>
+                );
+            })}
+        </group>
+    );
 }
 
 function solveTargetYForTopThird({

@@ -1,4 +1,5 @@
 export const WAREHOUSE_CONFIG = {
+    ZONES: ['A', 'B', 'C'] as const,
     AISLE_COUNT: 5,
     BAYS_PER_AISLE: 8,
     LEVELS_PER_BAY: 4,

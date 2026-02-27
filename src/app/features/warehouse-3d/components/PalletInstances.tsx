@@ -11,6 +11,11 @@ const BaseColor = "#90a4bf";
 const FilterColor = "#BC804C";
 const HoverColor = "#d29a67";
 const SelectedColor = "#8f6136";
+const ZoneColors: Record<string, string> = {
+    A: "#7da7e6",
+    B: "#7ccf9e",
+    C: "#e0b86a",
+};
 
 type PalletInstancesProps = {
     onHoverInfoChange?: (payload: { pallet: SpatialPallet; clientX: number; clientY: number } | null) => void;
@@ -38,7 +43,7 @@ export const PalletInstances = ({ onHoverInfoChange }: PalletInstancesProps) => 
             } else if (isFilterActive) {
                 map.set(pallet.id, FilterColor);
             } else {
-                map.set(pallet.id, BaseColor);
+                map.set(pallet.id, ZoneColors[pallet.logicalAddress.zone] ?? BaseColor);
             }
         });
         return map;
