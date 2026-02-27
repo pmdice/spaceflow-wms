@@ -22,6 +22,7 @@ SpaceFlow introduces a constrained AI-assisted search flow that converts natural
 ### State and UI Composition
 
 - `zustand` is used as the application state boundary for pallets, filters, and selection state.
+- Deterministic pallet lifecycle events (`received`, `putaway`, `scan`, `picked`, `loaded`, `delay_flagged`) are used to derive operational KPIs.
 - The table, 3D scene, and overlay components are decoupled and react to shared state updates.
 - This keeps component responsibilities clear and avoids unnecessary synchronization logic.
 
