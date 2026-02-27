@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SpatialPallet, LogisticsFilter, PalletEvent } from '@/types/wms';
+import type { SpatialPallet, LogisticsFilter, PalletEvent, StorageLocation } from '@/types/wms';
 import { filterPallets } from './filter-pallets';
 import { buildPalletEvents } from '@/lib/pallet-events';
 import { WAREHOUSE_CONFIG } from '@/lib/constants';
@@ -96,7 +96,7 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
         if (!pallet) return;
 
         const timestamp = new Date().toISOString();
-        const updatedPallet = mutatePalletForAction(pallet, action, timestamp);
+        const updatedPallet = mutatePalletForAction(pallet, action, timestamp, state.pallets);
         const event = makeActionEvent(updatedPallet.id, action, timestamp);
 
         const updatedPallets = state.pallets.map((item) => (item.id === palletId ? updatedPallet : item));
@@ -161,29 +161,67 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
     setSelectedPalletId: (id) => set({ selectedPalletId: id }),
 }));
 
-function relocatePallet(pallet: SpatialPallet): SpatialPallet {
-    const nextAisle = (pallet.logicalAddress.aisle % WAREHOUSE_CONFIG.AISLE_COUNT) + 1;
-    const nextBay = (pallet.logicalAddress.bay % WAREHOUSE_CONFIG.BAYS_PER_AISLE) + 1;
-    const nextLevel = (pallet.logicalAddress.level % WAREHOUSE_CONFIG.LEVELS_PER_BAY) + 1;
+function relocatePallet(pallet: SpatialPallet, allPallets: SpatialPallet[]): SpatialPallet {
+    const occupied = new Set(
+        allPallets
+            .filter((item) => item.id !== pallet.id)
+            .map((item) => item.logicalAddress.id),
+    );
+
+    const nextLocation = findNextFreeLocation(pallet.logicalAddress, occupied);
+    if (!nextLocation) {
+        return pallet;
+    }
 
     return {
         ...pallet,
-        logicalAddress: {
-            ...pallet.logicalAddress,
-            aisle: nextAisle,
-            bay: nextBay,
-            level: nextLevel,
-            id: formatLocationId(pallet.logicalAddress.zone, nextAisle, nextBay, nextLevel),
-        },
+        logicalAddress: nextLocation,
     };
 }
 
-function formatLocationId(zone: string, aisle: number, bay: number, level: number) {
+function findNextFreeLocation(current: StorageLocation, occupied: Set<string>): StorageLocation | null {
+    const totalSlots = WAREHOUSE_CONFIG.AISLE_COUNT * WAREHOUSE_CONFIG.BAYS_PER_AISLE * WAREHOUSE_CONFIG.LEVELS_PER_BAY;
+    const toIndex = (loc: StorageLocation) =>
+        (((loc.aisle - 1) * WAREHOUSE_CONFIG.BAYS_PER_AISLE + (loc.bay - 1)) * WAREHOUSE_CONFIG.LEVELS_PER_BAY) + (loc.level - 1);
+    const fromIndex = (index: number): Omit<StorageLocation, 'id' | 'zone'> => {
+        const aisleSpan = WAREHOUSE_CONFIG.BAYS_PER_AISLE * WAREHOUSE_CONFIG.LEVELS_PER_BAY;
+        const aisle = Math.floor(index / aisleSpan) + 1;
+        const bayLevelOffset = index % aisleSpan;
+        const bay = Math.floor(bayLevelOffset / WAREHOUSE_CONFIG.LEVELS_PER_BAY) + 1;
+        const level = (bayLevelOffset % WAREHOUSE_CONFIG.LEVELS_PER_BAY) + 1;
+        return { aisle, bay, level };
+    };
+
+    const start = toIndex(current);
+    for (let step = 1; step <= totalSlots; step += 1) {
+        const idx = (start + step) % totalSlots;
+        const slot = fromIndex(idx);
+        const id = formatLocationId(current.zone, slot.aisle, slot.bay, slot.level);
+        if (!occupied.has(id)) {
+            return {
+                id,
+                zone: current.zone,
+                aisle: slot.aisle,
+                bay: slot.bay,
+                level: slot.level,
+            };
+        }
+    }
+
+    return null;
+}
+
+function formatLocationId(zone: string, aisle: number, bay: number, level: number): string {
     const pad = (value: number) => value.toString().padStart(2, '0');
     return `LOC-${zone}-${pad(aisle)}-${pad(bay)}-${pad(level)}`;
 }
 
-function mutatePalletForAction(pallet: SpatialPallet, action: PalletAction, timestamp: string): SpatialPallet {
+function mutatePalletForAction(
+    pallet: SpatialPallet,
+    action: PalletAction,
+    timestamp: string,
+    allPallets: SpatialPallet[],
+): SpatialPallet {
     const next = { ...pallet, lastScannedAt: timestamp };
     switch (action) {
         case 'receive':
@@ -195,7 +233,7 @@ function mutatePalletForAction(pallet: SpatialPallet, action: PalletAction, time
         case 'delay':
             return { ...next, status: 'delayed', urgency: 'high' };
         case 'relocate':
-            return relocatePallet(next);
+            return relocatePallet(next, allPallets);
         case 'scan':
         default:
             return next;
