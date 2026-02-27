@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { MagicSearchbar } from '@/app/features/ai-search/components/MagicSearchbar';
 import { LogisticsTable } from '@/app/features/logistics-table/components/LogisticsTable';
@@ -9,6 +9,8 @@ import { ParcelDetailPanel } from '@/app/features/parcel-detail/components/Parce
 import {
     Box,
     Activity,
+    Clock3,
+    AlertTriangle,
     Maximize,
     Minimize,
     PackageCheck,
@@ -24,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { calculateLogisticsKpis, groupEventsByPallet } from '@/lib/logistics-kpis';
 
 const BASE_LIST_PANEL_HEIGHT_DVH = 48;
 const REPOSITORY_URL = 'https://github.com/pmdice/spaceflow-wms';
@@ -34,6 +37,7 @@ export default function DashboardPage() {
 
     const pallets = useLogisticsStore((state) => state.filteredPallets);
     const allPallets = useLogisticsStore((state) => state.pallets);
+    const palletEvents = useLogisticsStore((state) => state.palletEvents);
     const totalPallets = useLogisticsStore((state) => state.pallets.length);
     const filteredCount = pallets.length;
     const selectedPalletId = useLogisticsStore((state) => state.selectedPalletId);
@@ -41,6 +45,9 @@ export default function DashboardPage() {
 
     const delayedCount = pallets.filter(p => p.status === 'delayed').length;
     const selectedPallet = allPallets.find((p) => p.id === selectedPalletId) ?? null;
+    const eventsByPallet = useMemo(() => groupEventsByPallet(palletEvents), [palletEvents]);
+    const selectedPalletEvents = selectedPallet ? (eventsByPallet.get(selectedPallet.id) ?? []) : [];
+    const kpis = useMemo(() => calculateLogisticsKpis(pallets, palletEvents), [pallets, palletEvents]);
 
     const [is3DInteractive, setIs3DInteractive] = useState(false);
     const [isListExpanded, setIsListExpanded] = useState(false);
@@ -90,6 +97,26 @@ export default function DashboardPage() {
             </div>
 
             <div className="relative z-10 flex flex-col h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-20 left-6 z-40 pointer-events-auto">
+                    <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 gap-2 bg-gray-900/88 text-white hover:bg-gray-900 border border-white/10 backdrop-blur-md shadow-[0_12px_28px_rgba(15,23,42,0.28)]"
+                    >
+                        <a
+                            href={REPOSITORY_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Open project repository on GitHub"
+                            title="View project repository"
+                        >
+                            <Github className="size-4" />
+                            <span className="text-xs font-semibold tracking-wide">View Code</span>
+                            <ExternalLink className="size-3.5 opacity-80" />
+                        </a>
+                    </Button>
+                </div>
 
                 <header className={cn(
                     "relative flex h-16 shrink-0 items-center justify-between px-6 pointer-events-auto bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm z-20 transition-all duration-500",
@@ -106,27 +133,6 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
-                        <Button
-                            asChild
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 gap-2 bg-gray-900/88 text-white hover:bg-gray-900 border border-white/10 backdrop-blur-md shadow-[0_12px_28px_rgba(15,23,42,0.28)]"
-                        >
-                            <a
-                                href={REPOSITORY_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="Open project repository on GitHub"
-                                title="View project repository"
-                            >
-                                <Github className="size-4" />
-                                <span className="text-xs font-semibold tracking-wide">View Code</span>
-                                <ExternalLink className="size-3.5 opacity-80" />
-                            </a>
-                        </Button>
-                    </div>
-
                     <div className="flex items-center gap-2">
                         <HeaderKPIChip
                             label="Active Volume"
@@ -138,6 +144,22 @@ export default function DashboardPage() {
                             value={delayedCount}
                             icon={Activity}
                             alert={delayedCount > 0}
+                        />
+                        <HeaderKPIChip
+                            label="On-Time"
+                            value={`${kpis.onTimeHandlingRate.toFixed(1)}%`}
+                            icon={PackageCheck}
+                        />
+                        <HeaderKPIChip
+                            label="Avg Dwell"
+                            value={`${kpis.avgDwellHours.toFixed(1)}h`}
+                            icon={Clock3}
+                        />
+                        <HeaderKPIChip
+                            label="Scan Gaps >24h"
+                            value={kpis.staleScans24h}
+                            icon={AlertTriangle}
+                            alert={kpis.staleScans24h > 0}
                         />
                     </div>
                 </header>
@@ -198,6 +220,7 @@ export default function DashboardPage() {
 
                 <ParcelDetailPanel
                     pallet={selectedPallet}
+                    events={selectedPalletEvents}
                     onClose={() => setSelectedPalletId(null)}
                 />
 
