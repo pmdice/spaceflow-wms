@@ -3,12 +3,6 @@
 SpaceFlow WMS is a portfolio-grade Warehouse Management System dashboard built with Next.js App Router.  
 It demonstrates how natural-language search can be translated into typed logistics filters and applied consistently across a 2D data grid and a 3D warehouse view.
 
-<p align="center">
-  <a href="https://github.com/pmdice/spaceflow-wms">
-    <img alt="View on GitHub" src="https://img.shields.io/badge/View%20Project%20on-GitHub-1f2937?style=for-the-badge&logo=github&logoColor=white" />
-  </a>
-</p>
-
 ![SpaceFlow Interface](docs/screenshot.jpg)
 
 ## Overview
