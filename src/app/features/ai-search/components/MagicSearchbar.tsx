@@ -4,13 +4,17 @@ import { useState } from 'react';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { Loader2, Sparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { PalletAction } from '@/types/wms';
 
 export const MagicSearchbar = () => {
     const [prompt, setPrompt] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [submitInfo, setSubmitInfo] = useState<string | null>(null);
 
     const applyAIFilter = useLogisticsStore((state) => state.applyAIFilter);
+    const applyPalletAction = useLogisticsStore((state) => state.applyPalletAction);
+    const applyBulkPalletAction = useLogisticsStore((state) => state.applyBulkPalletAction);
     const resetFilter = useLogisticsStore((state) => state.resetFilter);
     const isFiltered = useLogisticsStore((state) => state.pallets.length !== state.filteredPallets.length);
 
@@ -20,6 +24,7 @@ export const MagicSearchbar = () => {
 
         setIsSearching(true);
         setSubmitError(null);
+        setSubmitInfo(null);
 
         try {
             const response = await fetch('/api/parse-intent', {
@@ -33,10 +38,54 @@ export const MagicSearchbar = () => {
                 throw new Error(payload?.error ?? 'The AI filter request failed.');
             }
 
-            const data = await response.json();
+            const data = await response.json() as {
+                intent?: {
+                    intentType: 'filter' | 'action';
+                    filter: Parameters<typeof applyAIFilter>[0];
+                    action: PalletAction | null;
+                    maxTargets: number;
+                    targetPalletId: string | null;
+                    targetZone: 'A' | 'B' | 'C' | null;
+                    targetDestination: string | null;
+                };
+            };
+            if (!data.intent) {
+                throw new Error('No AI intent was returned.');
+            }
 
-            if (data.filter) {
-                applyAIFilter(data.filter);
+            if (data.intent.intentType === 'filter') {
+                applyAIFilter(data.intent.filter);
+                setSubmitInfo('Filter updated.');
+            } else if (data.intent.action) {
+                const overrides = {
+                    targetZone: data.intent.targetZone,
+                    targetDestination: data.intent.targetDestination,
+                };
+
+                if (data.intent.targetPalletId) {
+                    const applied = applyPalletAction(
+                        data.intent.targetPalletId,
+                        data.intent.action,
+                        overrides,
+                    );
+                    setSubmitInfo(
+                        applied
+                            ? `${formatActionLabel(data.intent.action)} applied to ${data.intent.targetPalletId}.`
+                            : `Pallet ${data.intent.targetPalletId} not found.`,
+                    );
+                } else {
+                    const affected = applyBulkPalletAction(
+                        data.intent.action,
+                        data.intent.filter,
+                        data.intent.maxTargets,
+                        overrides,
+                    );
+                    setSubmitInfo(
+                        affected > 0
+                            ? `${formatActionLabel(data.intent.action)} applied to ${affected} pallet${affected === 1 ? '' : 's'}.`
+                            : 'No matching pallets found for this action.',
+                    );
+                }
             }
         } catch (error) {
             console.error("Fehler bei der Intent-Erkennung:", error);
@@ -49,6 +98,7 @@ export const MagicSearchbar = () => {
     const handleClear = () => {
         setPrompt('');
         setSubmitError(null);
+        setSubmitInfo(null);
         resetFilter();
     };
 
@@ -102,6 +152,24 @@ export const MagicSearchbar = () => {
                     {submitError}
                 </p>
             )}
+            {submitInfo && !submitError && (
+                <p className="mt-2 px-1 text-xs font-medium text-slate-700">
+                    {submitInfo}
+                </p>
+            )}
         </div>
     );
 };
+
+function formatActionLabel(action: PalletAction): string {
+    switch (action) {
+        case 'delay':
+            return 'Delay flag';
+        case 'putaway':
+            return 'Putaway';
+        case 'set_destination':
+            return 'Destination update';
+        default:
+            return action.charAt(0).toUpperCase() + action.slice(1);
+    }
+}
