@@ -5,6 +5,15 @@ It demonstrates how natural-language commands can be translated into typed logis
 
 ![SpaceFlow Interface](docs/screenshot.jpg)
 
+## Why This Project
+
+This is not positioned as a full enterprise WMS replacement.  
+It is an AI-augmented operations prototype that focuses on:
+
+- deterministic AI intent contracts for operational safety
+- reversible state-changing commands (undoable AI actions)
+- synchronized data + spatial views for logistics decision support
+
 ## Overview
 
 Traditional WMS interfaces often require users to navigate deep, multi-step filtering workflows or separate command consoles for operational actions.  
@@ -48,11 +57,14 @@ Natural-language commands are interpreted into typed intents and executed safely
   - `show delayed pallets in Bern and highlight them red`
 - **AI operations**
   - `relocate PAL-00001 to zone C`
+  - `change PAL-00001 status to stored`
   - `change PAL-00002 destination to Bern`
   - `scan all high urgency pallets`
 - **Targeting model**
   - Single-pallet targeting via `targetPalletId`
   - Bulk targeting via filter criteria + capped `maxTargets`
+- **Safety UX**
+  - AI-triggered mutations show Sonner toasts with one-click **Undo**
 
 ## Operations Simulator
 
@@ -60,6 +72,39 @@ Natural-language commands are interpreted into typed intents and executed safely
 - Supports per-pallet actions (`scan`, `relocate`, `pick`, `load`, `putaway`, `delay`) and live auto-simulation.
 - Occupancy checks prevent relocation into already occupied physical slots.
 - Zone-aware 3D layout (A/B/C) provides clear spatial feedback when pallets move between zones.
+
+## Demo Script (60 Seconds)
+
+Use these commands in sequence to demonstrate capability quickly:
+
+1. `show me PAL-00001`
+2. `change PAL-00001 status to stored`
+3. `move PAL-00001 to zone C`
+4. `change PAL-00001 destination to Bern`
+5. Click **Undo** in Sonner toast to revert the last AI mutation
+
+What this demonstrates:
+- typed AI parsing for both read and write operations
+- real-time updates in table + KPI + 3D spatial view
+- operational safety through reversible commands
+
+## Engineering Decisions
+
+- **Typed intent boundary**
+  - `POST /api/parse-intent` returns validated, deterministic `LogisticsIntent` payloads instead of free-form model output.
+- **Centralized state orchestration**
+  - A single Zustand store coordinates pallets, filtered sets, lifecycle events, simulation loop, and mutation APIs.
+- **Event-driven KPI derivation**
+  - Operational metrics are computed from pallet lifecycle events, not hardcoded dashboard numbers.
+- **Safety-first mutations**
+  - Relocations enforce occupancy constraints; AI write actions are undoable through toast actions.
+
+## Known Limitations
+
+- AI intent parsing relies on prompt+schema constraints and may still require iterative tuning for edge phrasing.
+- Current simulation is in-memory and single-user; no persistence or server reconciliation.
+- No authentication/authorization layer for write operations in this prototype.
+- Test suite covers core logic paths but is not yet full integration/e2e coverage.
 
 ## Security
 
