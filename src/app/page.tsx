@@ -122,7 +122,7 @@ export default function DashboardPage() {
 
                 <header className={cn(
                     "relative flex h-16 shrink-0 items-center justify-between px-6 pointer-events-auto bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm z-20 transition-all duration-500",
-                    is3DInteractive ? "translate-y-[-100%] opacity-0" : "translate-y-0 opacity-100"
+                    is3DInteractive ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
                 )}>
                     <div className="flex items-center gap-4">
                         <SidebarTrigger className="-ml-2 bg-white/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border-white/50" />
@@ -168,7 +168,7 @@ export default function DashboardPage() {
 
                 <div className={cn(
                     "absolute top-20 right-6 pointer-events-auto transition-all duration-500 ease-in-out z-30",
-                    is3DInteractive ? "opacity-0 translate-y-[-10px] scale-95 pointer-events-none" : "opacity-100 translate-y-0 scale-100"
+                    is3DInteractive ? "opacity-0 -translate-y-2.5 scale-95 pointer-events-none" : "opacity-100 translate-y-0 scale-100"
                 )}>
                     <div className="flex items-center gap-2">
                         <Button
@@ -198,7 +198,7 @@ export default function DashboardPage() {
 
                 <div className={cn(
                     "absolute top-8 left-1/2 -translate-x-1/2 pointer-events-auto transition-all duration-500 ease-in-out z-30",
-                    is3DInteractive ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-[-20px] scale-95 pointer-events-none"
+                    is3DInteractive ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-5 scale-95 pointer-events-none"
                 )}>
                     <button
                         onClick={() => setIs3DInteractive(false)}
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                 style={{ height: isListExpanded ? "calc(100dvh - 4rem)" : `${BASE_LIST_PANEL_HEIGHT_DVH}dvh` }}>
                     <Card className="bg-white/90 backdrop-blur-2xl border-t border-white/60 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] rounded-none h-full flex flex-col py-0 gap-0">
                         <CardContent className="p-0 overflow-hidden flex-1 relative">
-                            <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none" />
+                            <div className="absolute top-0 left-0 right-0 h-4 bg-linear-to-b from-white to-transparent z-10 pointer-events-none" />
                             <LogisticsTable />
                         </CardContent>
                     </Card>
