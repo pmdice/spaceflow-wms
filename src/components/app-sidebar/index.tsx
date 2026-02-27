@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   Box,
   LayoutDashboard,
@@ -29,24 +31,27 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/",
       icon: LayoutDashboard,
-      isActive: true,
+      enabled: true,
     },
     {
       title: "Inventory",
-      url: "#",
+      url: "/inventory",
       icon: Package,
+      enabled: true,
     },
     {
       title: "Shipments",
       url: "#",
       icon: Truck,
+      enabled: false,
     },
     {
       title: "Staff",
       url: "#",
       icon: Users,
+      enabled: false,
     },
   ],
   secondary: [
@@ -54,23 +59,27 @@ const data = {
       title: "Notifications",
       url: "#",
       icon: Bell,
+      enabled: false,
     },
     {
       title: "Settings",
       url: "#",
       icon: Settings,
+      enabled: false,
     },
   ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname()
+
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link href="/">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[#BC804C] text-white">
                   <Box className="size-4" />
                 </div>
@@ -78,7 +87,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span className="font-semibold text-[#2D2D2D]">SpaceFlow</span>
                   <span className="text-xs text-[#666666]">WMS Portal</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -90,12 +99,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {data.navMain.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title} isActive={item.isActive}>
-                    <a href={item.url}>
+                  {item.enabled ? (
+                    <SidebarMenuButton asChild tooltip={item.title} isActive={pathname === item.url}>
+                      <Link href={item.url}>
+                        {item.icon && <item.icon />}
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  ) : (
+                    <SidebarMenuButton
+                      tooltip={`${item.title} (coming soon)`}
+                      aria-disabled="true"
+                      className="cursor-not-allowed opacity-45 hover:bg-transparent hover:text-sidebar-foreground"
+                    >
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -106,12 +126,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {data.secondary.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild size="sm" tooltip={item.title}>
-                    <a href={item.url}>
+                  {item.enabled ? (
+                    <SidebarMenuButton asChild size="sm" tooltip={item.title}>
+                      <a href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  ) : (
+                    <SidebarMenuButton
+                      size="sm"
+                      tooltip={`${item.title} (coming soon)`}
+                      aria-disabled="true"
+                      className="cursor-not-allowed opacity-45 hover:bg-transparent hover:text-sidebar-foreground"
+                    >
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
