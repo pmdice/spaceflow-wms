@@ -1,10 +1,12 @@
 import { create } from 'zustand';
-import type { SpatialPallet, LogisticsFilter } from '../types/wms';
+import type { SpatialPallet, LogisticsFilter, PalletEvent } from '../types/wms';
 import { filterPallets } from './filter-pallets';
+import { buildPalletEvents } from '@/lib/pallet-events';
 
 interface LogisticsState {
     pallets: SpatialPallet[];
     filteredPallets: SpatialPallet[];
+    palletEvents: PalletEvent[];
     isLoading: boolean;
     error: string | null;
 
@@ -23,6 +25,7 @@ interface LogisticsState {
 export const useLogisticsStore = create<LogisticsState>((set, get) => ({
     pallets: [],
     filteredPallets: [],
+    palletEvents: [],
     isLoading: false,
     error: null,
     activeHighlightColor: null,
@@ -37,8 +40,9 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
             if (!response.ok) throw new Error('Failed to fetch pallets data');
 
             const data: SpatialPallet[] = await response.json();
+            const palletEvents = buildPalletEvents(data);
 
-            set({ pallets: data, filteredPallets: data, isLoading: false });
+            set({ pallets: data, filteredPallets: data, palletEvents, isLoading: false });
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to fetch pallets data';
             set({ error: message, isLoading: false });
