@@ -1,0 +1,18 @@
+{
+    "name": "@spaceflow/database",
+    "version": "1.0.0",
+    "main": "index.ts",
+    "scripts": {
+      "db:push": "npx prisma db push",
+      "db:generate": "npx prisma generate"
+    },
+    "types": "index.ts",
+    "dependencies": {
+      "@prisma/client": "latest"
+    },
+    "devDependencies": {
+      "dotenv": "^16.4.5",
+      "prisma": "latest",
+      "typescript": "latest"
+    }
+  }
