@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
     });
 
     if (!session) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/login", request.url));
     }
 
     if (isAdminRoute && session.user.role !== "ADMIN") {
@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   } catch {
     // Fail closed if auth validation fails unexpectedly.
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 }
 

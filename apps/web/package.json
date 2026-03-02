@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "pnpm next dev",
+    "build": "pnpm next build",
+    "start": "pnpm next start",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -13,6 +13,7 @@
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@spaceflow/config-env": "workspace:*",
     "@spaceflow/database": "workspace:*",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.18",
