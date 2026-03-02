@@ -5,6 +5,9 @@
       "dependsOn": [
         "^build"
       ],
+      "env": [
+        "OPENAI_API_KEY"
+      ],
       "outputs": [
         ".next/**",
         "dist/**",
@@ -19,7 +22,10 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": [
+        "OPENAI_API_KEY"
+      ]
     }
   }
 }

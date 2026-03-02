@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
-import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { PalletInstances } from './PalletInstances';
 import { ShelfInstances } from './ShelfInstances';
 import type { SpatialPallet } from '@/types/wms';
@@ -26,7 +25,7 @@ type WarehouseSceneProps = {
 
 export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false, splitPanelHeightRatio = 0.48 }: WarehouseSceneProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const controlsRef = useRef<OrbitControlsImpl | null>(null);
+    const controlsRef = useRef<React.ComponentRef<typeof OrbitControls> | null>(null);
     const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
     const setSelectedPalletId = useLogisticsStore((state) => state.setSelectedPalletId);
     const selectedPalletId = useLogisticsStore((state) => state.selectedPalletId);
@@ -162,7 +161,7 @@ function CameraFocusController({
 }: {
     selectedPalletId: string | null;
     pallets: SpatialPallet[];
-    controlsRef: React.RefObject<OrbitControlsImpl | null>;
+    controlsRef: React.RefObject<React.ComponentRef<typeof OrbitControls> | null>;
     isFullscreen3D: boolean;
     isListExpanded: boolean;
     filterRevision: number;
