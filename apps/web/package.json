@@ -1,5 +1,5 @@
 {
-  "name": "spaceflow-wms",
+  "name": "@spaceflow/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
