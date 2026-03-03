@@ -8,9 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@eslint/js':
+        specifier: ^9.18.0
+        version: 9.39.3
       '@prisma/client':
         specifier: ^7.4.2
         version: 7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3)
+      typescript-eslint:
+        specifier: ^8.20.0
+        version: 8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)
     devDependencies:
       turbo:
         specifier: ^2.5.6
