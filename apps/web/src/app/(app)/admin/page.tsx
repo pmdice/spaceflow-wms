@@ -5,7 +5,6 @@ import { auth } from "~lib/auth";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { DashboardAuthBar } from "@/components/dashboard-auth-bar";
 import { Shield, ArrowLeft, Box } from "lucide-react";
 
 export default async function AdminPage() {
@@ -35,7 +34,6 @@ export default async function AdminPage() {
             </h1>
           </div>
         </div>
-        <DashboardAuthBar />
       </header>
 
       <main className="flex flex-1 flex-col items-center justify-center p-8">

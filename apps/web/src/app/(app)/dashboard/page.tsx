@@ -6,7 +6,6 @@ import { MagicSearchbar } from "@/app/features/ai-search/components/MagicSearchb
 import { LogisticsTable } from "@/app/features/logistics-table/components/LogisticsTable";
 import { WarehouseScene } from "@/app/features/warehouse-3d/components/WarehouseScene";
 import { ParcelDetailPanel } from "@/app/features/parcel-detail/components/ParcelDetailPanel";
-import { DashboardAuthBar } from "@/components/dashboard-auth-bar";
 import {
   Box,
   Activity,
@@ -161,8 +160,6 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <DashboardAuthBar />
-            <Separator orientation="vertical" className="h-4 bg-gray-300 hidden sm:block" />
             <div className="flex items-center gap-2">
               <HeaderKPIChip
                 label="Active Volume"
