@@ -32,7 +32,6 @@ jobs:
           done
 
           if [ "$missing" -ne 0 ]; then
-            echo "One or more required env vars are missing. Configure them in GitHub repo/environment secrets."
             exit 1
           fi
 
