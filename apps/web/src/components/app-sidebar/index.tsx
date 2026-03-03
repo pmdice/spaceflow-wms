@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Box,
   LayoutDashboard,
@@ -12,7 +12,9 @@ import {
   Users,
   LogOut,
   Bell,
+  Shield,
 } from "lucide-react"
+import { authClient } from "~lib/auth-client"
 
 import {
   Sidebar,
@@ -27,11 +29,19 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
 
+function formatRole(role?: string) {
+  if (!role) return "User"
+  if (role === "ADMIN") return "Admin"
+  if (role === "MANAGER") return "Manager"
+  if (role === "PICKER") return "Picker"
+  return role
+}
+
 const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/",
+      url: "/dashboard",
       icon: LayoutDashboard,
       enabled: true,
     },
@@ -56,6 +66,13 @@ const data = {
   ],
   secondary: [
     {
+      title: "Admin Panel",
+      url: "/admin",
+      icon: Shield,
+      enabled: false,
+      adminOnly: true,
+    },
+    {
       title: "Notifications",
       url: "#",
       icon: Bell,
@@ -72,6 +89,18 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { data: session, isPending } = authClient.useSession()
+
+  const handleSignOut = async () => {
+    await authClient.signOut()
+    router.push("/login")
+  }
+
+  const user = session?.user as { email?: string; name?: string; role?: string } | undefined
+  const displayName = user?.name || user?.email || "User"
+  const roleLabel = formatRole(user?.role)
+  const isAdmin = user?.role === "ADMIN"
 
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
@@ -79,7 +108,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
+              <Link href="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[#BC804C] text-white">
                   <Box className="size-4" />
                 </div>
@@ -124,28 +153,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
-              {data.secondary.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  {item.enabled ? (
-                    <SidebarMenuButton asChild size="sm" tooltip={item.title}>
-                      <a href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  ) : (
-                    <SidebarMenuButton
-                      size="sm"
-                      tooltip={`${item.title} (coming soon)`}
-                      aria-disabled="true"
-                      className="cursor-not-allowed opacity-45 hover:bg-transparent hover:text-sidebar-foreground"
-                    >
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  )}
-                </SidebarMenuItem>
-              ))}
+              {data.secondary
+                .filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin)
+                .map((item) => {
+                  const isAdminOnly = "adminOnly" in item && item.adminOnly
+                  const enabled = item.enabled || (isAdminOnly && isAdmin)
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      {enabled ? (
+                        <SidebarMenuButton asChild size="sm" tooltip={item.title}>
+                          <Link href={item.url}>
+                            <item.icon />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      ) : (
+                        <SidebarMenuButton
+                          size="sm"
+                          tooltip={`${item.title} (coming soon)`}
+                          aria-disabled="true"
+                          className="cursor-not-allowed opacity-45 hover:bg-transparent hover:text-sidebar-foreground"
+                        >
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </SidebarMenuButton>
+                      )}
+                    </SidebarMenuItem>
+                  )
+                })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -153,15 +188,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" tooltip="Profile">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-slate-200">
-                <Users className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="font-semibold">Patrick Mohr</span>
-                <span className="text-xs">Admin</span>
-              </div>
-              <LogOut className="ml-auto size-4" />
+            <SidebarMenuButton
+              size="sm"
+              tooltip={`Signed in as ${displayName} (${roleLabel})`}
+              className="cursor-default hover:bg-transparent"
+            >
+              <Users className="size-4 shrink-0" />
+              <span>{isPending ? "…" : `${displayName} · ${roleLabel}`}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="sm" tooltip="Logout" onClick={handleSignOut}>
+              <LogOut className="size-4 shrink-0" />
+              <span>Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
