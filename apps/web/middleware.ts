@@ -5,8 +5,9 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isDashboardRoute = pathname.startsWith("/dashboard");
   const isAdminRoute = pathname.startsWith("/admin");
+  const isInventoryRoute = pathname.startsWith("/inventory");
 
-  if (!isDashboardRoute && !isAdminRoute) {
+  if (!isDashboardRoute && !isAdminRoute && !isInventoryRoute) {
     return NextResponse.next();
   }
 
@@ -32,5 +33,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   runtime: "nodejs",
-  matcher: ["/dashboard/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/inventory/:path*"],
 };
