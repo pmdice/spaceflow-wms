@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   pull_request:
-    branches: [ "main", "development" ]
+    branches: ["main", "development"]
 
 jobs:
   build-and-test:
@@ -10,10 +10,31 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Assert required env vars are set
+        shell: bash
+        run: |
+          required_vars=(OPENAI_API_KEY DATABASE_URL BETTER_AUTH_SECRET BETTER_AUTH_URL)
+
+          missing=0
+          for v in "${required_vars[@]}"; do
+            if [ -z "${!v}" ]; then
+              echo "::error title=Missing env var::${v} is not set (or empty) in GitHub Actions secrets."
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            echo "One or more required env vars are missing. Configure them in GitHub repo/environment secrets."
+            exit 1
+          fi
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -23,8 +44,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
+          node-version: "20"
+          cache: "pnpm"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
