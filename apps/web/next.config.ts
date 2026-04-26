@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://api.dicebear.com; font-src 'self' data:; connect-src 'self' https://api.openai.com https://raw.githubusercontent.com https://cdn.jsdelivr.net;",
+              `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://api.dicebear.com; font-src 'self' data:; connect-src 'self' https://api.openai.com https://raw.githubusercontent.com https://cdn.jsdelivr.net ${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'};`,
           },
         ],
       },

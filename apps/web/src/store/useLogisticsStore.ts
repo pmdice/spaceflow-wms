@@ -58,7 +58,8 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
     fetchData: async () => {
         set({ isLoading: true, error: null });
         try {
-            const response = await fetch('/data/pallets.json');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+            const response = await fetch(`${apiUrl}/pallets`);
             if (!response.ok) throw new Error('Failed to fetch pallets data');
 
             const data: SpatialPallet[] = await response.json();
@@ -116,6 +117,15 @@ export const useLogisticsStore = create<LogisticsState>((set, get) => ({
             palletEvents: [event, ...state.palletEvents],
             filterRevision: state.filterRevision + 1,
         });
+
+        // Persist to NestJS API in the background — UI stays optimistic
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+        void fetch(`${apiUrl}/pallets/${palletId}/actions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ...overrides }),
+        }).catch(() => { /* non-critical: local state already updated */ });
+
         return { applied: true, eventIds: [event.id] };
     },
 

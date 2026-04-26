@@ -1,12 +1,16 @@
 {
   "name": "@spaceflow/database",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "index.ts",
+  "sideEffects": false,
   "scripts": {
+    "build": "tsup index.ts --format cjs,esm --clean --shims",
+    "dev": "tsup index.ts --format cjs,esm --watch",
     "db:push": "npx prisma db push",
     "db:generate": "npx prisma generate"
   },
-  "types": "index.ts",
   "dependencies": {
     "@prisma/adapter-pg": "latest",
     "@spaceflow/config-env": "workspace:*",
@@ -15,6 +19,7 @@
   "devDependencies": {
     "@types/pg": "^8.18.0",
     "prisma": "latest",
+    "tsup": "^8.0.2",
     "typescript": "latest"
   }
 }

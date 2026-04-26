@@ -54,7 +54,9 @@ export const ModelName = {
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  Pallet: 'Pallet',
+  PalletEvent: 'PalletEvent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -130,6 +132,39 @@ export const VerificationScalarFieldEnum = {
 } as const
 
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
+
+
+export const PalletScalarFieldEnum = {
+  id: 'id',
+  destination: 'destination',
+  status: 'status',
+  urgency: 'urgency',
+  weightKg: 'weightKg',
+  lastScannedAt: 'lastScannedAt',
+  locationId: 'locationId',
+  zone: 'zone',
+  aisle: 'aisle',
+  bay: 'bay',
+  level: 'level',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PalletScalarFieldEnum = (typeof PalletScalarFieldEnum)[keyof typeof PalletScalarFieldEnum]
+
+
+export const PalletEventScalarFieldEnum = {
+  id: 'id',
+  palletId: 'palletId',
+  type: 'type',
+  at: 'at',
+  actor: 'actor',
+  source: 'source',
+  note: 'note',
+  createdAt: 'createdAt'
+} as const
+
+export type PalletEventScalarFieldEnum = (typeof PalletEventScalarFieldEnum)[keyof typeof PalletEventScalarFieldEnum]
 
 
 export const SortOrder = {

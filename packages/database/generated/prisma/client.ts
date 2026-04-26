@@ -61,3 +61,13 @@ export type Account = Prisma.AccountModel
  * 
  */
 export type Verification = Prisma.VerificationModel
+/**
+ * Model Pallet
+ * 
+ */
+export type Pallet = Prisma.PalletModel
+/**
+ * Model PalletEvent
+ * 
+ */
+export type PalletEvent = Prisma.PalletEventModel

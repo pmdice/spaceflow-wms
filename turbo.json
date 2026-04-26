@@ -9,7 +9,8 @@
         "OPENAI_API_KEY",
         "DATABASE_URL",
         "BETTER_AUTH_SECRET",
-        "BETTER_AUTH_URL"
+        "BETTER_AUTH_URL",
+        "NEXT_PUBLIC_API_URL"
       ],
       "outputs": [
         ".next/**",
@@ -33,7 +34,8 @@
       "cache": false,
       "persistent": true,
       "env": [
-        "OPENAI_API_KEY"
+        "OPENAI_API_KEY",
+        "NEXT_PUBLIC_API_URL"
       ]
     }
   }

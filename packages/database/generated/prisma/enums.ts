@@ -16,3 +16,43 @@ export const Role = {
 } as const
 
 export type Role = (typeof Role)[keyof typeof Role]
+
+
+export const PalletStatus = {
+  stored: 'stored',
+  transit: 'transit',
+  delayed: 'delayed'
+} as const
+
+export type PalletStatus = (typeof PalletStatus)[keyof typeof PalletStatus]
+
+
+export const Urgency = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high'
+} as const
+
+export type Urgency = (typeof Urgency)[keyof typeof Urgency]
+
+
+export const PalletEventType = {
+  received: 'received',
+  putaway: 'putaway',
+  scan: 'scan',
+  relocated: 'relocated',
+  picked: 'picked',
+  loaded: 'loaded',
+  delay_flagged: 'delay_flagged'
+} as const
+
+export type PalletEventType = (typeof PalletEventType)[keyof typeof PalletEventType]
+
+
+export const EventSource = {
+  scanner: 'scanner',
+  operator: 'operator',
+  system: 'system'
+} as const
+
+export type EventSource = (typeof EventSource)[keyof typeof EventSource]

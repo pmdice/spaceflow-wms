@@ -387,7 +387,9 @@ export const ModelName = {
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  Pallet: 'Pallet',
+  PalletEvent: 'PalletEvent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -403,7 +405,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification"
+    modelProps: "user" | "session" | "account" | "verification" | "pallet" | "palletEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -703,6 +705,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Pallet: {
+      payload: Prisma.$PalletPayload<ExtArgs>
+      fields: Prisma.PalletFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PalletFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PalletFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload>
+        }
+        findFirst: {
+          args: Prisma.PalletFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PalletFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload>
+        }
+        findMany: {
+          args: Prisma.PalletFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload>[]
+        }
+        create: {
+          args: Prisma.PalletCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload>
+        }
+        createMany: {
+          args: Prisma.PalletCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PalletCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload>[]
+        }
+        delete: {
+          args: Prisma.PalletDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload>
+        }
+        update: {
+          args: Prisma.PalletUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload>
+        }
+        deleteMany: {
+          args: Prisma.PalletDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PalletUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PalletUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload>[]
+        }
+        upsert: {
+          args: Prisma.PalletUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletPayload>
+        }
+        aggregate: {
+          args: Prisma.PalletAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePallet>
+        }
+        groupBy: {
+          args: Prisma.PalletGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PalletGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PalletCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PalletCountAggregateOutputType> | number
+        }
+      }
+    }
+    PalletEvent: {
+      payload: Prisma.$PalletEventPayload<ExtArgs>
+      fields: Prisma.PalletEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PalletEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PalletEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload>
+        }
+        findFirst: {
+          args: Prisma.PalletEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PalletEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload>
+        }
+        findMany: {
+          args: Prisma.PalletEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload>[]
+        }
+        create: {
+          args: Prisma.PalletEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload>
+        }
+        createMany: {
+          args: Prisma.PalletEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PalletEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload>[]
+        }
+        delete: {
+          args: Prisma.PalletEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload>
+        }
+        update: {
+          args: Prisma.PalletEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.PalletEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PalletEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PalletEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.PalletEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PalletEventPayload>
+        }
+        aggregate: {
+          args: Prisma.PalletEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePalletEvent>
+        }
+        groupBy: {
+          args: Prisma.PalletEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PalletEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PalletEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PalletEventCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -801,6 +951,39 @@ export const VerificationScalarFieldEnum = {
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
 
 
+export const PalletScalarFieldEnum = {
+  id: 'id',
+  destination: 'destination',
+  status: 'status',
+  urgency: 'urgency',
+  weightKg: 'weightKg',
+  lastScannedAt: 'lastScannedAt',
+  locationId: 'locationId',
+  zone: 'zone',
+  aisle: 'aisle',
+  bay: 'bay',
+  level: 'level',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PalletScalarFieldEnum = (typeof PalletScalarFieldEnum)[keyof typeof PalletScalarFieldEnum]
+
+
+export const PalletEventScalarFieldEnum = {
+  id: 'id',
+  palletId: 'palletId',
+  type: 'type',
+  at: 'at',
+  actor: 'actor',
+  source: 'source',
+  note: 'note',
+  createdAt: 'createdAt'
+} as const
+
+export type PalletEventScalarFieldEnum = (typeof PalletEventScalarFieldEnum)[keyof typeof PalletEventScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -881,6 +1064,48 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'PalletStatus'
+ */
+export type EnumPalletStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PalletStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'PalletStatus[]'
+ */
+export type ListEnumPalletStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PalletStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Urgency'
+ */
+export type EnumUrgencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Urgency'>
+    
+
+
+/**
+ * Reference to a field of type 'Urgency[]'
+ */
+export type ListEnumUrgencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Urgency[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -891,6 +1116,34 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PalletEventType'
+ */
+export type EnumPalletEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PalletEventType'>
+    
+
+
+/**
+ * Reference to a field of type 'PalletEventType[]'
+ */
+export type ListEnumPalletEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PalletEventType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'EventSource'
+ */
+export type EnumEventSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EventSource'>
+    
+
+
+/**
+ * Reference to a field of type 'EventSource[]'
+ */
+export type ListEnumEventSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EventSource[]'>
     
 
 /**
@@ -992,6 +1245,8 @@ export type GlobalOmitConfig = {
   session?: Prisma.SessionOmit
   account?: Prisma.AccountOmit
   verification?: Prisma.VerificationOmit
+  pallet?: Prisma.PalletOmit
+  palletEvent?: Prisma.PalletEventOmit
 }
 
 /* Types for Logging */

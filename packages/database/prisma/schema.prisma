@@ -71,3 +71,71 @@ model Verification {
 
   @@map("verification")
 }
+
+// ── WMS domain ────────────────────────────────────────────────────────────────
+
+enum PalletStatus {
+  stored
+  transit
+  delayed
+}
+
+enum Urgency {
+  low
+  medium
+  high
+}
+
+enum PalletEventType {
+  received
+  putaway
+  scan
+  relocated
+  picked
+  loaded
+  delay_flagged
+}
+
+enum EventSource {
+  scanner
+  operator
+  system
+}
+
+model Pallet {
+  id            String       @id
+  destination   String
+  status        PalletStatus @default(stored)
+  urgency       Urgency      @default(low)
+  weightKg      Float
+  lastScannedAt DateTime
+
+  // StorageLocation embedded as columns
+  locationId    String
+  zone          String
+  aisle         Int
+  bay           Int
+  level         Int
+
+  events        PalletEvent[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("pallet")
+}
+
+model PalletEvent {
+  id       String          @id
+  palletId String
+  pallet   Pallet          @relation(fields: [palletId], references: [id], onDelete: Cascade)
+  type     PalletEventType
+  at       DateTime
+  actor    String
+  source   EventSource
+  note     String?
+
+  createdAt DateTime @default(now())
+
+  @@map("pallet_event")
+}
