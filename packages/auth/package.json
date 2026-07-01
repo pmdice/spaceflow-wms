@@ -1,5 +1,5 @@
 {
-  "name": "@spaceflow/wms-types",
+  "name": "@spaceflow/auth",
   "version": "1.0.0",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -11,8 +11,10 @@
     "dev": "tsup src/index.ts --format cjs,esm --watch --dts",
     "lint": "eslint -c ../../eslint.config.mjs \"src/**/*.ts\""
   },
-  "peerDependencies": {
-    "zod": ">=4.0.0"
+  "dependencies": {
+    "@spaceflow/config-env": "workspace:*",
+    "@spaceflow/database": "workspace:*",
+    "better-auth": "^1.5.1"
   },
   "devDependencies": {
     "eslint": "^9.39.3",
