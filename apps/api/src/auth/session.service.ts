@@ -10,18 +10,25 @@ const SECURE_SESSION_COOKIE_NAME = `__Secure-${SESSION_COOKIE_NAME}`;
 
 @Injectable()
 export class SessionService {
-  async validate(cookieHeader: string | undefined): Promise<SessionUser | null> {
+  async validate(
+    cookieHeader: string | undefined,
+  ): Promise<SessionUser | null> {
     const token = this.extractVerifiedToken(cookieHeader);
     if (!token) return null;
 
-    const session = await db.session.findUnique({ where: { token }, include: { user: true } });
+    const session = await db.session.findUnique({
+      where: { token },
+      include: { user: true },
+    });
     if (!session) return null;
     if (session.expiresAt.getTime() <= Date.now()) return null;
 
     return { id: session.user.id, role: session.user.role };
   }
 
-  private extractVerifiedToken(cookieHeader: string | undefined): string | null {
+  private extractVerifiedToken(
+    cookieHeader: string | undefined,
+  ): string | null {
     if (!cookieHeader) return null;
 
     const raw =
@@ -29,7 +36,16 @@ export class SessionService {
       this.readCookie(cookieHeader, SECURE_SESSION_COOKIE_NAME);
     if (!raw) return null;
 
-    return this.verifySignedValue(decodeURIComponent(raw));
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(raw);
+    } catch {
+      // Malformed percent-encoding (e.g. a stray "%") — fail closed like any other
+      // invalid-cookie case, rather than letting URIError bubble up as a 500.
+      return null;
+    }
+
+    return this.verifySignedValue(decoded);
   }
 
   private readCookie(cookieHeader: string, name: string): string | null {
@@ -60,7 +76,9 @@ export class SessionService {
     const signature = value.substring(signatureStartPos + 1);
     if (signature.length !== 44 || !signature.endsWith('=')) return null;
 
-    const expectedSignature = createHmac('sha256', env.BETTER_AUTH_SECRET).update(token).digest('base64');
+    const expectedSignature = createHmac('sha256', env.BETTER_AUTH_SECRET)
+      .update(token)
+      .digest('base64');
 
     const provided = Buffer.from(signature);
     const expected = Buffer.from(expectedSignature);

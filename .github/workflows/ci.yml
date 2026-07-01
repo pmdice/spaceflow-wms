@@ -57,3 +57,6 @@ jobs:
 
       - name: Run Tests
         run: pnpm turbo run test
+
+      - name: Run End-to-End Tests
+        run: pnpm turbo run test:e2e

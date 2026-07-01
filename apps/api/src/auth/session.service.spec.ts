@@ -35,10 +35,19 @@ describe('SessionService', () => {
     expect(await service.validate('other=value')).toBeNull();
   });
 
+  it('returns null instead of throwing when the cookie has malformed percent-encoding', async () => {
+    const user = await service.validate('better-auth.session_token=%zz');
+
+    expect(user).toBeNull();
+    expect(mockedDb.session.findUnique).not.toHaveBeenCalled();
+  });
+
   it('returns null when the signature does not match, without touching the database', async () => {
     const tampered = `${signToken('real-token')}x`;
 
-    const user = await service.validate(`better-auth.session_token=${tampered}`);
+    const user = await service.validate(
+      `better-auth.session_token=${tampered}`,
+    );
 
     expect(user).toBeNull();
     expect(mockedDb.session.findUnique).not.toHaveBeenCalled();
@@ -47,7 +56,9 @@ describe('SessionService', () => {
   it('returns null for a well-formed but forged signature', async () => {
     const forged = `some-token.${'A'.repeat(43)}=`;
 
-    expect(await service.validate(`better-auth.session_token=${forged}`)).toBeNull();
+    expect(
+      await service.validate(`better-auth.session_token=${forged}`),
+    ).toBeNull();
   });
 
   it('looks up the verified token and returns the user when the session is valid', async () => {
@@ -57,7 +68,9 @@ describe('SessionService', () => {
       user: { id: 'user-1', role: 'ADMIN' },
     });
 
-    const user = await service.validate(`better-auth.session_token=${signToken('real-token')}`);
+    const user = await service.validate(
+      `better-auth.session_token=${signToken('real-token')}`,
+    );
 
     expect(user).toEqual({ id: 'user-1', role: 'ADMIN' });
     expect(mockedDb.session.findUnique).toHaveBeenCalledWith({
@@ -73,7 +86,9 @@ describe('SessionService', () => {
       user: { id: 'user-1', role: 'ADMIN' },
     });
 
-    const user = await service.validate(`better-auth.session_token=${signToken('expired-token')}`);
+    const user = await service.validate(
+      `better-auth.session_token=${signToken('expired-token')}`,
+    );
 
     expect(user).toBeNull();
   });
@@ -81,7 +96,9 @@ describe('SessionService', () => {
   it('returns null when no session row matches the verified token', async () => {
     mockedDb.session.findUnique.mockResolvedValue(null);
 
-    const user = await service.validate(`better-auth.session_token=${signToken('missing-token')}`);
+    const user = await service.validate(
+      `better-auth.session_token=${signToken('missing-token')}`,
+    );
 
     expect(user).toBeNull();
   });
@@ -93,7 +110,9 @@ describe('SessionService', () => {
       user: { id: 'user-1', role: 'PICKER' },
     });
 
-    const user = await service.validate(`__Secure-better-auth.session_token=${signToken('real-token')}`);
+    const user = await service.validate(
+      `__Secure-better-auth.session_token=${signToken('real-token')}`,
+    );
 
     expect(user).toEqual({ id: 'user-1', role: 'PICKER' });
   });
