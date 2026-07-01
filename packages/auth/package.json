@@ -17,6 +17,7 @@
     "better-auth": "^1.5.1"
   },
   "devDependencies": {
+    "eslint": "^9.39.3",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5",
     "@types/node": "^20.12.7"
