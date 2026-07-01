@@ -5,7 +5,15 @@ import { customSession } from "better-auth/plugins";
 import { db, Role } from "@spaceflow/database";
 import { env } from "@spaceflow/config-env";
 
-export function createAuthOptions(extraPlugins: BetterAuthPlugin[] = []): BetterAuthOptions {
+// `satisfies BetterAuthOptions`, not `: BetterAuthOptions` — an explicit return-type
+// annotation widens the returned object to the interface's shape, which erases the literal
+// types (e.g. additionalFields.role.type: "string") and the specific plugins-array structure
+// that betterAuth()'s own generic inference needs downstream (auth.api.getSession()'s
+// session.user.role). `satisfies` validates the object against BetterAuthOptions (so a typo
+// here would still be caught) while preserving its own precise inferred type. Confirmed by a
+// real `next build` TypeScript failure in apps/web/middleware.ts ("Property 'role' does not
+// exist ...") when this was a plain `: BetterAuthOptions` annotation instead.
+export function createAuthOptions(extraPlugins: BetterAuthPlugin[] = []) {
   return {
     database: prismaAdapter(db, {
       provider: "postgresql",
@@ -39,7 +47,7 @@ export function createAuthOptions(extraPlugins: BetterAuthPlugin[] = []): Better
       }),
       ...extraPlugins,
     ],
-  };
+  } satisfies BetterAuthOptions;
 }
 
 export const auth = betterAuth(createAuthOptions());
