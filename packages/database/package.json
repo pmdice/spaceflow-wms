@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "types": "index.ts",
   "scripts": {
-    "build": "tsup index.ts --format cjs --clean --shims",
+    "build": "tsup index.ts --format cjs --clean --shims && cp generated/prisma/*.so.node dist/",
     "dev": "tsup index.ts --format cjs --watch",
     "db:push": "npx prisma db push",
     "db:generate": "npx prisma generate"
