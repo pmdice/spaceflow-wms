@@ -1,21 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
+import { Outlines, RoundedBox } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { calculate3DPosition } from '@/lib/warehouse-math';
-import { WAREHOUSE_CONFIG } from '@/lib/constants';
+import { WAREHOUSE_CONFIG, CLAY_PALETTE } from '@/lib/constants';
 import type { SpatialPallet } from '@/types/wms';
-
-const BaseColor = "#90a4bf";
-const FilterColor = "#BC804C";
-const HoverColor = "#d29a67";
-const SelectedColor = "#8f6136";
-const ZoneColors: Record<string, string> = {
-    A: "#7da7e6",
-    B: "#7ccf9e",
-    C: "#e0b86a",
-};
+import { getPalletOutline, type PalletOutline } from '../lib/pallet-outline';
 
 type PalletInstancesProps = {
     onHoverInfoChange?: (payload: { pallet: SpatialPallet; clientX: number; clientY: number } | null) => void;
@@ -31,20 +23,18 @@ export const PalletInstances = ({ onHoverInfoChange }: PalletInstancesProps) => 
     const setSelectedPalletId = useLogisticsStore((state) => state.setSelectedPalletId);
     const isFilterActive = allPallets.length !== filteredPallets.length;
 
-    const colorByPalletId = useMemo(() => {
-        const map = new Map<string, string>();
+    const outlineByPalletId = useMemo(() => {
+        const map = new Map<string, PalletOutline>();
         filteredPallets.forEach((pallet) => {
-            if (selectedPalletId === pallet.id) {
-                map.set(pallet.id, SelectedColor);
-            } else if (hoveredPalletId === pallet.id) {
-                map.set(pallet.id, HoverColor);
-            } else if (isFilterActive && highlightColorHex) {
-                map.set(pallet.id, highlightColorHex);
-            } else if (isFilterActive) {
-                map.set(pallet.id, FilterColor);
-            } else {
-                map.set(pallet.id, ZoneColors[pallet.logicalAddress.zone] ?? BaseColor);
-            }
+            map.set(
+                pallet.id,
+                getPalletOutline({
+                    isSelected: selectedPalletId === pallet.id,
+                    isHovered: hoveredPalletId === pallet.id,
+                    isFilterActive,
+                    highlightColorHex,
+                }),
+            );
         });
         return map;
     }, [filteredPallets, hoveredPalletId, selectedPalletId, isFilterActive, highlightColorHex]);
@@ -55,11 +45,15 @@ export const PalletInstances = ({ onHoverInfoChange }: PalletInstancesProps) => 
                 const position = calculate3DPosition(pallet.logicalAddress);
                 const y = position.y + (WAREHOUSE_CONFIG.PALLET_SIZE[1] / 2);
                 const rotationY = ((index % 7) - 3) * 0.025;
-                const meshColor = colorByPalletId.get(pallet.id) ?? BaseColor;
+                const outline = outlineByPalletId.get(pallet.id) ?? null;
+                const isUrgent = pallet.urgency === 'high';
 
                 return (
-                    <mesh
+                    <RoundedBox
                         key={pallet.id}
+                        args={WAREHOUSE_CONFIG.PALLET_SIZE}
+                        radius={0.1}
+                        smoothness={4}
                         position={[position.x, y, position.z]}
                         rotation={[0, rotationY, 0]}
                         onPointerOver={(event: ThreeEvent<PointerEvent>) => {
@@ -84,13 +78,15 @@ export const PalletInstances = ({ onHoverInfoChange }: PalletInstancesProps) => 
                             setSelectedPalletId(pallet.id);
                         }}
                     >
-                        <boxGeometry args={WAREHOUSE_CONFIG.PALLET_SIZE} />
                         <meshStandardMaterial
-                            color={meshColor}
-                            roughness={0.45}
-                            metalness={0.08}
+                            color={CLAY_PALETTE.base}
+                            roughness={0.92}
+                            metalness={0.02}
+                            emissive={isUrgent ? CLAY_PALETTE.urgentGlow : '#000000'}
+                            emissiveIntensity={isUrgent ? 0.9 : 0}
                         />
-                    </mesh>
+                        {outline && <Outlines color={outline.color} thickness={outline.thickness} />}
+                    </RoundedBox>
                 );
             })}
         </group>

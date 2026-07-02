@@ -3,23 +3,26 @@
 import { useMemo, useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
-import { WAREHOUSE_CONFIG } from '@/lib/constants';
+import { WAREHOUSE_CONFIG, CLAY_PALETTE } from '@/lib/constants';
 import { calculate3DPosition } from '@/lib/warehouse-math';
 
 const { SHELF_SIZE, LEVEL_HEIGHT, LEVELS_PER_BAY, START_OFFSET, AISLE_COUNT, BAYS_PER_AISLE, ZONES } = WAREHOUSE_CONFIG;
-const ZoneColors: Record<string, { frame: string; deck: string }> = {
-    A: { frame: '#8da8d4', deck: '#eef4ff' },
-    B: { frame: '#7fb69a', deck: '#eefbf3' },
-    C: { frame: '#d2b07a', deck: '#fff8ec' },
-};
+
+const POST_THICKNESS = 0.1;
+const POST_CORNER_SIGNS: Array<[number, number]> = [
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+    [1, 1],
+];
 
 export const ShelfInstances = () => {
     const allPallets = useLogisticsStore((state) => state.pallets);
 
-    const frameRef = useRef<THREE.InstancedMesh>(null);
+    const postRef = useRef<THREE.InstancedMesh>(null);
     const deckRef = useRef<THREE.InstancedMesh>(null);
 
-    const frameDummy = useMemo(() => new THREE.Object3D(), []);
+    const postDummy = useMemo(() => new THREE.Object3D(), []);
     const deckDummy = useMemo(() => new THREE.Object3D(), []);
 
     // Build a full warehouse grid so empty racks are visible too.
@@ -56,30 +59,36 @@ export const ShelfInstances = () => {
     }, [allPallets]);
 
     const totalRacks = rackBays.length;
+    const totalPosts = totalRacks * 4;
     const totalDecks = totalRacks * LEVELS_PER_BAY;
 
     // Constant rack height for all bays to mimic real warehouse shelving.
     const rackHeight = (LEVELS_PER_BAY * LEVEL_HEIGHT) + 0.2;
-    const rackSize: [number, number, number] = [SHELF_SIZE[0], rackHeight, SHELF_SIZE[2]];
+    const postSize: [number, number, number] = [POST_THICKNESS, rackHeight, POST_THICKNESS];
     const deckSize: [number, number, number] = [SHELF_SIZE[0] * 0.9, 0.05, SHELF_SIZE[2] * 0.9];
+    const postHalfWidth = (SHELF_SIZE[0] / 2) - (POST_THICKNESS / 2);
+    const postHalfDepth = (SHELF_SIZE[2] / 2) - (POST_THICKNESS / 2);
 
     useLayoutEffect(() => {
-        if (!frameRef.current || !deckRef.current || totalRacks === 0) return;
+        if (!postRef.current || !deckRef.current || totalRacks === 0) return;
 
-        let frameCounter = 0;
+        let postCounter = 0;
         let deckCounter = 0;
 
         rackBays.forEach((bay) => {
-            const zonePalette = ZoneColors[bay.zone] ?? ZoneColors.A;
-            frameDummy.position.set(
-                bay.x,
-                START_OFFSET.y + (rackHeight / 2),
-                bay.z
-            );
-            frameDummy.scale.set(1, 1, 1);
-            frameDummy.updateMatrix();
-            frameRef.current!.setMatrixAt(frameCounter++, frameDummy.matrix);
-            frameRef.current!.setColorAt(frameCounter - 1, new THREE.Color(zonePalette.frame));
+            const shelfColor = new THREE.Color(CLAY_PALETTE.zoneShelf[bay.zone] ?? CLAY_PALETTE.zoneShelf.A);
+
+            POST_CORNER_SIGNS.forEach(([signX, signZ]) => {
+                postDummy.position.set(
+                    bay.x + (signX * postHalfWidth),
+                    START_OFFSET.y + (rackHeight / 2),
+                    bay.z + (signZ * postHalfDepth)
+                );
+                postDummy.scale.set(1, 1, 1);
+                postDummy.updateMatrix();
+                postRef.current!.setMatrixAt(postCounter++, postDummy.matrix);
+                postRef.current!.setColorAt(postCounter - 1, shelfColor);
+            });
 
             for (let level = 0; level < LEVELS_PER_BAY; level++) {
                 // Decks are anchored from ground up at fixed level spacing.
@@ -91,40 +100,28 @@ export const ShelfInstances = () => {
                 deckDummy.scale.set(1, 1, 1);
                 deckDummy.updateMatrix();
                 deckRef.current!.setMatrixAt(deckCounter++, deckDummy.matrix);
-                deckRef.current!.setColorAt(deckCounter - 1, new THREE.Color(zonePalette.deck));
+                deckRef.current!.setColorAt(deckCounter - 1, shelfColor);
             }
         });
 
-        frameRef.current.instanceMatrix.needsUpdate = true;
+        postRef.current.instanceMatrix.needsUpdate = true;
         deckRef.current.instanceMatrix.needsUpdate = true;
-        if (frameRef.current.instanceColor) frameRef.current.instanceColor.needsUpdate = true;
+        if (postRef.current.instanceColor) postRef.current.instanceColor.needsUpdate = true;
         if (deckRef.current.instanceColor) deckRef.current.instanceColor.needsUpdate = true;
-    }, [rackBays, frameDummy, deckDummy, totalRacks, rackHeight]);
+    }, [rackBays, postDummy, deckDummy, totalRacks, rackHeight, postHalfWidth, postHalfDepth]);
 
     if (totalRacks === 0) return null;
 
     return (
         <>
-            <instancedMesh ref={frameRef} args={[undefined, undefined, totalRacks]} raycast={() => null}>
-                <boxGeometry args={rackSize} />
-                <meshStandardMaterial
-                    vertexColors
-                    roughness={0.75}
-                    metalness={0.15}
-                    transparent
-                    opacity={0.14}
-                />
+            <instancedMesh ref={postRef} args={[undefined, undefined, totalPosts]} raycast={() => null}>
+                <boxGeometry args={postSize} />
+                <meshStandardMaterial vertexColors roughness={0.92} metalness={0.02} />
             </instancedMesh>
 
             <instancedMesh ref={deckRef} args={[undefined, undefined, totalDecks]} raycast={() => null}>
                 <boxGeometry args={deckSize} />
-                <meshStandardMaterial
-                    vertexColors
-                    roughness={0.9}
-                    metalness={0.05}
-                    transparent
-                    opacity={0.22}
-                />
+                <meshStandardMaterial vertexColors roughness={0.92} metalness={0.02} />
             </instancedMesh>
         </>
     );
