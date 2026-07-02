@@ -1,6 +1,20 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // @spaceflow/database is bundled by tsup into a single dist/index.js, and Prisma
+  // loads its native query engine via a runtime path.join(__dirname, "...") string
+  // that Next.js's file tracer can't follow statically. Without help, the
+  // rhel-openssl-3.0.x engine binary never gets copied into the Vercel serverless
+  // function, so every DB query fails with "could not locate the Query Engine".
+  // Point tracing at the monorepo root and force-include both engine binaries.
+  outputFileTracingRoot: path.join(__dirname, "../../"),
+  outputFileTracingIncludes: {
+    "/**": [
+      "../../packages/database/dist/*.so.node",
+      "../../packages/database/generated/prisma/*.so.node",
+    ],
+  },
   async headers() {
     return [
       {
