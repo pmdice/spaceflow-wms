@@ -13,12 +13,25 @@ import { env } from "@spaceflow/config-env";
 // here would still be caught) while preserving its own precise inferred type. Confirmed by a
 // real `next build` TypeScript failure in apps/web/middleware.ts ("Property 'role' does not
 // exist ...") when this was a plain `: BetterAuthOptions` annotation instead.
+// Vercel assigns every deployment (including each preview) its own unique
+// subdomain and injects it as VERCEL_URL. A fixed baseURL/BETTER_AUTH_URL
+// can't match that, so BetterAuth's origin check rejects auth requests with
+// a 403 on any deployment other than the one BETTER_AUTH_URL happens to
+// point at. Trust the deployment's own origin in addition to the configured
+// one so previews keep working without per-deployment config.
+const vercelDeploymentUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : undefined;
+
 export function createAuthOptions(extraPlugins: BetterAuthPlugin[] = []) {
   return {
     database: prismaAdapter(db, {
       provider: "postgresql",
     }),
-    baseURL: env.BETTER_AUTH_URL,
+    baseURL: vercelDeploymentUrl ?? env.BETTER_AUTH_URL,
+    trustedOrigins: vercelDeploymentUrl
+      ? [env.BETTER_AUTH_URL, vercelDeploymentUrl]
+      : [env.BETTER_AUTH_URL],
     secret: env.BETTER_AUTH_SECRET,
     emailAndPassword: {
       enabled: true,
