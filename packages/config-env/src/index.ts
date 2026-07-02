@@ -12,23 +12,27 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
-function findRoot(dir: string): string {
+function findRoot(dir: string): string | null {
   if (fs.existsSync(path.join(dir, "pnpm-lock.yaml"))) {
     return dir;
   }
   const parent = path.dirname(dir);
   if (parent === dir) {
-    throw new Error("Could not find project root (pnpm-lock.yaml)");
+    return null;
   }
   return findRoot(parent);
 }
 
 function loadEnv() {
+  // Deployment platforms (Vercel, etc.) inject env vars directly into
+  // process.env — there's no .env file or monorepo checkout to find in the
+  // deployed serverless bundle, so treat a missing root as "nothing to load".
   const rootDir = findRoot(process.cwd());
-  const envPath = path.resolve(rootDir, ".env");
-
-  console.log(`Loading .env from: ${envPath}`);
-  config({ path: envPath });
+  if (rootDir) {
+    const envPath = path.resolve(rootDir, ".env");
+    console.log(`Loading .env from: ${envPath}`);
+    config({ path: envPath });
+  }
 
   const parsed = envSchema.safeParse(process.env);
 
