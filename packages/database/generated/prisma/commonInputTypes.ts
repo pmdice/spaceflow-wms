@@ -9,9 +9,9 @@
  * 🟢 You can import this file directly.
  */
 
-import type * as runtime from "@prisma/client/runtime/client"
-import * as $Enums from "./enums.ts"
-import type * as Prisma from "./internal/prismaNamespace.ts"
+import type * as runtime from "@prisma/client/runtime/library"
+import * as $Enums from "./enums"
+import type * as Prisma from "./internal/prismaNamespace"
 
 
 export type StringFilter<$PrismaModel = never> = {

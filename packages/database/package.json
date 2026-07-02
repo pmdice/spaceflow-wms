@@ -10,13 +10,14 @@
     "db:generate": "npx prisma generate"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "latest",
+    "@prisma/adapter-pg": "6.19.3",
     "@spaceflow/config-env": "workspace:*",
-    "pg": "latest"
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "@types/pg": "^8.18.0",
-    "prisma": "latest",
+    "dotenv": "^16.4.7",
+    "prisma": "6.19.3",
     "tsup": "^8.0.2",
     "typescript": "latest"
   }
