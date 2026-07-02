@@ -9,7 +9,7 @@ import { ShelfInstances } from './ShelfInstances';
 import type { SpatialPallet } from '@/types/wms';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { calculate3DPosition } from '@/lib/warehouse-math';
-import { WAREHOUSE_CONFIG } from '@/lib/constants';
+import { WAREHOUSE_CONFIG, CLAY_PALETTE } from '@/lib/constants';
 
 type HoverInfo = {
     pallet: SpatialPallet;
@@ -75,19 +75,19 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false,
         <div ref={containerRef} className="relative h-full w-full">
             <Canvas
                 camera={{ position: [20, 20, 20], fov: 50 }}
-                shadows={{ type: THREE.PCFShadowMap }}
+                shadows={{ type: THREE.PCFSoftShadowMap }}
                 onPointerMissed={() => setSelectedPalletId(null)}
             >
-                {/* Light, clean backdrop inspired by reference */}
-                <color attach="background" args={['#eef2f8']} />
-                <fog attach="fog" args={['#f0f2f5', 45, 170]} />
+                {/* Warm, matte clay backdrop */}
+                <color attach="background" args={[CLAY_PALETTE.background]} />
+                <fog attach="fog" args={[CLAY_PALETTE.background, 45, 170]} />
 
-                {/* Soft studio-like lighting */}
-                <ambientLight intensity={0.75} />
-                <hemisphereLight args={['#ffffff', '#d8e2f2', 0.4]} />
+                {/* Soft, even studio-like lighting */}
+                <ambientLight intensity={0.95} />
+                <hemisphereLight args={['#ffffff', '#d8e2f2', 0.55]} />
                 <directionalLight
                     position={[10, 20, 10]}
-                    intensity={1.1}
+                    intensity={0.85}
                     castShadow
                     shadow-mapSize={[2048, 2048]}
                 />
@@ -97,14 +97,13 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false,
                     args={[100, 100]}
                     cellSize={2}
                     cellThickness={0.6}
-                    cellColor="#cfd8e8"
+                    cellColor={CLAY_PALETTE.grid.cell}
                     sectionSize={10}
                     sectionThickness={1}
-                    sectionColor="#9fb0cb"
+                    sectionColor={CLAY_PALETTE.grid.section}
                     fadeDistance={50}
                     raycast={() => null}
                 />
-                <ZoneBands />
 
                 {/* Scene geometry */}
                 <ShelfInstances />
@@ -345,37 +344,6 @@ function CameraFocusController({
     });
 
     return null;
-}
-
-function ZoneBands() {
-    const zoneColors: Record<string, string> = {
-        A: '#dbeafe',
-        B: '#dcfce7',
-        C: '#fef3c7',
-    };
-
-    return (
-        <group>
-            {WAREHOUSE_CONFIG.ZONES.map((zone) => {
-                const left = calculate3DPosition({ id: '', zone, aisle: 1, bay: 1, level: 1 });
-                const right = calculate3DPosition({ id: '', zone, aisle: WAREHOUSE_CONFIG.AISLE_COUNT, bay: 1, level: 1 });
-                const front = calculate3DPosition({ id: '', zone, aisle: 1, bay: 1, level: 1 });
-                const back = calculate3DPosition({ id: '', zone, aisle: 1, bay: WAREHOUSE_CONFIG.BAYS_PER_AISLE, level: 1 });
-
-                const width = Math.abs(right.x - left.x) + (WAREHOUSE_CONFIG.AISLE_WIDTH + WAREHOUSE_CONFIG.SHELF_SIZE[2]);
-                const depth = Math.abs(back.z - front.z) + WAREHOUSE_CONFIG.BAY_WIDTH;
-                const centerX = (left.x + right.x) / 2;
-                const centerZ = (front.z + back.z) / 2;
-
-                return (
-                    <mesh key={zone} position={[centerX, -0.08, centerZ]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
-                        <planeGeometry args={[width, depth]} />
-                        <meshBasicMaterial color={zoneColors[zone] ?? '#e2e8f0'} transparent opacity={0.22} />
-                    </mesh>
-                );
-            })}
-        </group>
-    );
 }
 
 function solveTargetYForTopThird({
