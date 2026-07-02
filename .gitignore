@@ -25,6 +25,11 @@
 # package build output
 **/dist/
 
+# prisma native query engine binaries (unused — client runs engine-less via WASM)
+**/generated/prisma/*.so.node
+**/generated/prisma/*.dll.node
+**/generated/prisma/*.dylib.node
+
 # IDE
 .idea/
 
