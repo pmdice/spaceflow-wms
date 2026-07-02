@@ -11,6 +11,7 @@ jobs:
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
       BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
       BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
 
@@ -21,7 +22,7 @@ jobs:
       - name: Assert required env vars are set
         shell: bash
         run: |
-          required_vars=(OPENAI_API_KEY DATABASE_URL BETTER_AUTH_SECRET BETTER_AUTH_URL)
+          required_vars=(OPENAI_API_KEY DATABASE_URL DIRECT_URL BETTER_AUTH_SECRET BETTER_AUTH_URL)
 
           missing=0
           for v in "${required_vars[@]}"; do
