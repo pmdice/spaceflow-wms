@@ -16,6 +16,7 @@
     "@spaceflow/auth": "workspace:*",
     "@spaceflow/config-env": "workspace:*",
     "@spaceflow/database": "workspace:*",
+    "@spaceflow/pallets": "workspace:*",
     "@spaceflow/wms-types": "workspace:*",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.18",
