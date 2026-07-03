@@ -76,8 +76,6 @@ export const ShelfInstances = () => {
         let deckCounter = 0;
 
         rackBays.forEach((bay) => {
-            const shelfColor = new THREE.Color(CLAY_PALETTE.zoneShelf[bay.zone] ?? CLAY_PALETTE.zoneShelf.A);
-
             POST_CORNER_SIGNS.forEach(([signX, signZ]) => {
                 postDummy.position.set(
                     bay.x + (signX * postHalfWidth),
@@ -87,7 +85,6 @@ export const ShelfInstances = () => {
                 postDummy.scale.set(1, 1, 1);
                 postDummy.updateMatrix();
                 postRef.current!.setMatrixAt(postCounter++, postDummy.matrix);
-                postRef.current!.setColorAt(postCounter - 1, shelfColor);
             });
 
             for (let level = 0; level < LEVELS_PER_BAY; level++) {
@@ -100,14 +97,11 @@ export const ShelfInstances = () => {
                 deckDummy.scale.set(1, 1, 1);
                 deckDummy.updateMatrix();
                 deckRef.current!.setMatrixAt(deckCounter++, deckDummy.matrix);
-                deckRef.current!.setColorAt(deckCounter - 1, shelfColor);
             }
         });
 
         postRef.current.instanceMatrix.needsUpdate = true;
         deckRef.current.instanceMatrix.needsUpdate = true;
-        if (postRef.current.instanceColor) postRef.current.instanceColor.needsUpdate = true;
-        if (deckRef.current.instanceColor) deckRef.current.instanceColor.needsUpdate = true;
     }, [rackBays, postDummy, deckDummy, totalRacks, rackHeight, postHalfWidth, postHalfDepth]);
 
     if (totalRacks === 0) return null;
@@ -116,12 +110,12 @@ export const ShelfInstances = () => {
         <>
             <instancedMesh ref={postRef} args={[undefined, undefined, totalPosts]} raycast={() => null}>
                 <boxGeometry args={postSize} />
-                <meshStandardMaterial vertexColors roughness={0.92} metalness={0.02} />
+                <meshStandardMaterial color={CLAY_PALETTE.shelf.post} roughness={0.95} metalness={0.02} />
             </instancedMesh>
 
             <instancedMesh ref={deckRef} args={[undefined, undefined, totalDecks]} raycast={() => null}>
                 <boxGeometry args={deckSize} />
-                <meshStandardMaterial vertexColors roughness={0.92} metalness={0.02} />
+                <meshStandardMaterial color={CLAY_PALETTE.shelf.deck} roughness={0.95} metalness={0.02} />
             </instancedMesh>
         </>
     );

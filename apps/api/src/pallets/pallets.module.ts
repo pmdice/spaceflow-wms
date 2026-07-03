@@ -3,7 +3,7 @@ import { PalletsController } from './pallets.controller';
 import { PalletsService } from './pallets.service';
 
 @Module({
-    controllers: [PalletsController],
-    providers: [PalletsService],
+  controllers: [PalletsController],
+  providers: [PalletsService],
 })
 export class PalletsModule {}

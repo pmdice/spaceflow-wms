@@ -9,9 +9,6 @@ import { SessionGuard } from './auth/session.guard';
 @Module({
   imports: [AuthModule, PalletsModule],
   controllers: [AppController],
-  providers: [
-    AppService,
-    { provide: APP_GUARD, useClass: SessionGuard },
-  ],
+  providers: [AppService, { provide: APP_GUARD, useClass: SessionGuard }],
 })
 export class AppModule {}

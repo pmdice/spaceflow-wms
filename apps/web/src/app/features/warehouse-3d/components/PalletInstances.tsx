@@ -5,7 +5,7 @@ import { Outlines, RoundedBox } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { calculate3DPosition } from '@/lib/warehouse-math';
-import { WAREHOUSE_CONFIG, CLAY_PALETTE } from '@/lib/constants';
+import { WAREHOUSE_CONFIG, CLAY_PALETTE, getPalletStatusColor } from '@/lib/constants';
 import type { SpatialPallet } from '@/types/wms';
 import { getPalletOutline, type PalletOutline } from '../lib/pallet-outline';
 
@@ -47,6 +47,7 @@ export const PalletInstances = ({ onHoverInfoChange }: PalletInstancesProps) => 
                 const rotationY = ((index % 7) - 3) * 0.025;
                 const outline = outlineByPalletId.get(pallet.id) ?? null;
                 const isUrgent = pallet.urgency === 'high';
+                const palletColor = getPalletStatusColor(pallet.status);
 
                 return (
                     <RoundedBox
@@ -79,11 +80,11 @@ export const PalletInstances = ({ onHoverInfoChange }: PalletInstancesProps) => 
                         }}
                     >
                         <meshStandardMaterial
-                            color={CLAY_PALETTE.base}
-                            roughness={0.92}
+                            color={palletColor}
+                            roughness={0.85}
                             metalness={0.02}
                             emissive={isUrgent ? CLAY_PALETTE.urgentGlow : '#000000'}
-                            emissiveIntensity={isUrgent ? 0.9 : 0}
+                            emissiveIntensity={isUrgent ? 0.35 : 0}
                         />
                         {outline && <Outlines color={outline.color} thickness={outline.thickness} />}
                     </RoundedBox>

@@ -90,7 +90,13 @@ describe('Pallets API (e2e)', () => {
         urgency: 'low',
         weightKg: 250,
         lastScannedAt: '2026-01-01T00:00:00.000Z',
-        logicalAddress: { id: 'LOC-A-01-01-1', zone: 'A', aisle: 1, bay: 1, level: 1 },
+        logicalAddress: {
+          id: 'LOC-A-01-01-1',
+          zone: 'A',
+          aisle: 1,
+          bay: 1,
+          level: 1,
+        },
       },
     ]);
   });
@@ -98,6 +104,9 @@ describe('Pallets API (e2e)', () => {
   it('still allows GET / without a session (public route)', async () => {
     validate.mockResolvedValue(null);
 
-    await request(app.getHttpServer()).get('/').expect(200).expect('Hello World!');
+    await request(app.getHttpServer())
+      .get('/')
+      .expect(200)
+      .expect('Hello World!');
   });
 });

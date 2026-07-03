@@ -17,9 +17,23 @@ const CLAY_ZONE_SHELF_COLORS: Record<string, string> = {
     C: '#e0d6c2',
 };
 
+// Status-driven pallet colours — the only strongly saturated elements in the
+// scene (Mirror's-Edge logic: neutral clay world, accent colour on what matters).
+const CLAY_PALLET_STATUS_COLORS: Record<string, string> = {
+    stored: '#c9a277', // warm tan — a "box" that reads apart from the pale shelf
+    transit: '#3e8494', // muted teal — cool accent that pops against warm clay
+    delayed: '#d94f38', // red-orange — the alert state
+};
+
 export const CLAY_PALETTE = {
     base: '#f0e9dc',
     zoneShelf: CLAY_ZONE_SHELF_COLORS,
+    // Light, calm shelving so the structure recedes and the pallets are the focus.
+    shelf: {
+        deck: '#efe7d9', // shelf surfaces — near the background, quietly present
+        post: '#dccfb9', // uprights — a touch deeper so structure still reads
+    },
+    palletStatus: CLAY_PALLET_STATUS_COLORS,
     urgentGlow: '#ff5a3c',
     outline: {
         hover: '#8a8073',
@@ -32,3 +46,7 @@ export const CLAY_PALETTE = {
         section: '#c9bea8',
     },
 };
+
+export function getPalletStatusColor(status: string): string {
+    return CLAY_PALLET_STATUS_COLORS[status] ?? CLAY_PALETTE.base;
+}
