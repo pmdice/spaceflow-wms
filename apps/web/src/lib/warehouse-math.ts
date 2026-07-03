@@ -27,3 +27,112 @@ export const calculate3DPosition = (location: StorageLocation): THREE.Vector3 =>
 
     return new THREE.Vector3(x, y, z);
 };
+
+// ── Rack-row + zone layout (shared by shelving, staging plates, and framing) ──
+
+const ROW_PADDING_BAYS = 1;
+const SHELF_HALF_X = SHELF_SIZE[0] / 2;
+
+type PalletLike = { logicalAddress: { zone: string; aisle: number; bay: number } };
+
+export type RackRowExtent = {
+    zone: string;
+    aisle: number;
+    x: number;
+    firstBay: number;
+    lastBay: number;
+    zStart: number;
+    zEnd: number;
+};
+
+// Group pallets into occupied rack rows: one row per (zone, aisle), spanning the
+// occupied bay range padded by a bay. Empty aisles yield no row.
+export const groupRackRows = (pallets: PalletLike[]): RackRowExtent[] => {
+    const groups = new Map<string, { zone: string; aisle: number; minBay: number; maxBay: number }>();
+
+    for (const pallet of pallets) {
+        const { zone, aisle, bay } = pallet.logicalAddress;
+        const key = `${zone}:${aisle}`;
+        const existing = groups.get(key);
+        if (existing) {
+            existing.minBay = Math.min(existing.minBay, bay);
+            existing.maxBay = Math.max(existing.maxBay, bay);
+        } else {
+            groups.set(key, { zone, aisle, minBay: bay, maxBay: bay });
+        }
+    }
+
+    return Array.from(groups.values()).map(({ zone, aisle, minBay, maxBay }) => {
+        const firstBay = Math.max(1, minBay - ROW_PADDING_BAYS);
+        const lastBay = maxBay + ROW_PADDING_BAYS;
+        return {
+            zone,
+            aisle,
+            x: calculateAisleX(zone, aisle),
+            firstBay,
+            lastBay,
+            zStart: calculateBayZ(firstBay) - BAY_WIDTH / 2,
+            zEnd: calculateBayZ(lastBay) + BAY_WIDTH / 2,
+        };
+    });
+};
+
+export type ZoneBounds = {
+    zone: string;
+    minX: number;
+    maxX: number;
+    minZ: number;
+    maxZ: number;
+    centerX: number;
+    centerZ: number;
+};
+
+export type WarehouseLayout = {
+    zones: ZoneBounds[];
+    bounds: { minX: number; maxX: number; minZ: number; maxZ: number; centerX: number; centerZ: number } | null;
+};
+
+// Per-zone and overall floor footprints, derived from the occupied rack rows —
+// used to size the diorama base, zone plates, and camera framing.
+export const computeWarehouseLayout = (pallets: PalletLike[]): WarehouseLayout => {
+    const rows = groupRackRows(pallets);
+    if (rows.length === 0) return { zones: [], bounds: null };
+
+    const byZone = new Map<string, { minX: number; maxX: number; minZ: number; maxZ: number }>();
+    for (const row of rows) {
+        const box = byZone.get(row.zone) ?? { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+        box.minX = Math.min(box.minX, row.x - SHELF_HALF_X);
+        box.maxX = Math.max(box.maxX, row.x + SHELF_HALF_X);
+        box.minZ = Math.min(box.minZ, row.zStart);
+        box.maxZ = Math.max(box.maxZ, row.zEnd);
+        byZone.set(row.zone, box);
+    }
+
+    const zones: ZoneBounds[] = Array.from(byZone.entries())
+        .map(([zone, box]) => ({
+            zone,
+            ...box,
+            centerX: (box.minX + box.maxX) / 2,
+            centerZ: (box.minZ + box.maxZ) / 2,
+        }))
+        .sort((a, b) => a.zone.localeCompare(b.zone));
+
+    const bounds = zones.reduce(
+        (acc, z) => ({
+            minX: Math.min(acc.minX, z.minX),
+            maxX: Math.max(acc.maxX, z.maxX),
+            minZ: Math.min(acc.minZ, z.minZ),
+            maxZ: Math.max(acc.maxZ, z.maxZ),
+        }),
+        { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity },
+    );
+
+    return {
+        zones,
+        bounds: {
+            ...bounds,
+            centerX: (bounds.minX + bounds.maxX) / 2,
+            centerZ: (bounds.minZ + bounds.maxZ) / 2,
+        },
+    };
+};

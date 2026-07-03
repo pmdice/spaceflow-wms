@@ -4,16 +4,14 @@ import { useMemo, useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { WAREHOUSE_CONFIG, CLAY_PALETTE } from '@/lib/constants';
-import { calculateAisleX, calculateBayZ } from '@/lib/warehouse-math';
+import { groupRackRows } from '@/lib/warehouse-math';
 
-const { SHELF_SIZE, LEVEL_HEIGHT, LEVELS_PER_BAY, BAY_WIDTH, START_OFFSET } = WAREHOUSE_CONFIG;
+const { SHELF_SIZE, LEVEL_HEIGHT, LEVELS_PER_BAY, START_OFFSET } = WAREHOUSE_CONFIG;
 
 const POST_THICKNESS = 0.12;
 const DECK_THICKNESS = 0.07;
 // One shared upright cross-section roughly every this many bays (plus both row ends).
 const BAYS_PER_UPRIGHT = 4;
-// Empty shelf padding rendered beyond the first/last occupied bay, in bays.
-const ROW_PADDING_BAYS = 1;
 
 type RackRow = {
     /** X centre of the row (aisle position). */
@@ -26,48 +24,18 @@ type RackRow = {
     uprightZs: number[];
 };
 
-// Only render rack structure where inventory actually lives: group pallets by
-// (zone, aisle), take the occupied bay range, pad by a bay, and build one
-// continuous row segment per group. Empty aisles produce no geometry at all.
+// Turn each occupied rack-row extent into drawable structure: shared uprights
+// spaced along the row plus both ends, and a continuous deck per level.
 function buildRackRows(pallets: { logicalAddress: { zone: string; aisle: number; bay: number } }[]): RackRow[] {
-    const groups = new Map<string, { zone: string; aisle: number; minBay: number; maxBay: number }>();
-
-    for (const pallet of pallets) {
-        const { zone, aisle, bay } = pallet.logicalAddress;
-        const key = `${zone}:${aisle}`;
-        const existing = groups.get(key);
-        if (existing) {
-            existing.minBay = Math.min(existing.minBay, bay);
-            existing.maxBay = Math.max(existing.maxBay, bay);
-        } else {
-            groups.set(key, { zone, aisle, minBay: bay, maxBay: bay });
-        }
-    }
-
-    const rows: RackRow[] = [];
-    for (const { zone, aisle, minBay, maxBay } of groups.values()) {
-        const firstBay = Math.max(1, minBay - ROW_PADDING_BAYS);
-        const lastBay = maxBay + ROW_PADDING_BAYS;
-
-        const zStart = calculateBayZ(firstBay) - BAY_WIDTH / 2;
-        const zEnd = calculateBayZ(lastBay) + BAY_WIDTH / 2;
+    return groupRackRows(pallets).map(({ x, firstBay, lastBay, zStart, zEnd }) => {
         const lengthZ = zEnd - zStart;
-
         const uprightCount = Math.max(2, Math.ceil((lastBay - firstBay + 1) / BAYS_PER_UPRIGHT) + 1);
         const uprightZs: number[] = [];
         for (let i = 0; i < uprightCount; i++) {
             uprightZs.push(zStart + (lengthZ * (i / (uprightCount - 1))));
         }
-
-        rows.push({
-            x: calculateAisleX(zone, aisle),
-            z: (zStart + zEnd) / 2,
-            lengthZ,
-            uprightZs,
-        });
-    }
-
-    return rows;
+        return { x, z: (zStart + zEnd) / 2, lengthZ, uprightZs };
+    });
 }
 
 export const ShelfInstances = () => {

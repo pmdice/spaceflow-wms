@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Grid } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { PalletInstances } from './PalletInstances';
 import { ShelfInstances } from './ShelfInstances';
+import { WarehouseStaging } from './WarehouseStaging';
 import type { SpatialPallet } from '@/types/wms';
 import { useLogisticsStore } from '@/store/useLogisticsStore';
 import { calculate3DPosition } from '@/lib/warehouse-math';
@@ -75,35 +76,21 @@ export const WarehouseScene = ({ isFullscreen3D = false, isListExpanded = false,
         <div ref={containerRef} className="relative h-full w-full">
             <Canvas
                 camera={{ position: [20, 20, 20], fov: 50 }}
-                shadows={{ type: THREE.PCFSoftShadowMap }}
                 onPointerMissed={() => setSelectedPalletId(null)}
             >
                 {/* Warm, matte clay backdrop */}
                 <color attach="background" args={[CLAY_PALETTE.background]} />
                 <fog attach="fog" args={[CLAY_PALETTE.background, 45, 170]} />
 
-                {/* Soft, even studio-like lighting */}
-                <ambientLight intensity={0.95} />
+                {/* Soft, even studio-like lighting. Grounding is handled by
+                    ContactShadows (in WarehouseStaging), not a shadow map — so no
+                    castShadow here, which also drops the PCFShadowMap deprecation. */}
+                <ambientLight intensity={0.9} />
                 <hemisphereLight args={['#ffffff', '#d8e2f2', 0.55]} />
-                <directionalLight
-                    position={[10, 20, 10]}
-                    intensity={0.85}
-                    castShadow
-                    shadow-mapSize={[2048, 2048]}
-                />
-                {/* Ground reference grid */}
-                <Grid
-                    position={[0, -0.1, 0]}
-                    args={[100, 100]}
-                    cellSize={2}
-                    cellThickness={0.6}
-                    cellColor={CLAY_PALETTE.grid.cell}
-                    sectionSize={10}
-                    sectionThickness={1}
-                    sectionColor={CLAY_PALETTE.grid.section}
-                    fadeDistance={50}
-                    raycast={() => null}
-                />
+                <directionalLight position={[12, 22, 8]} intensity={0.7} />
+
+                {/* Diorama base + zone floor plates + contact shadow */}
+                <WarehouseStaging />
 
                 {/* Scene geometry */}
                 <ShelfInstances />

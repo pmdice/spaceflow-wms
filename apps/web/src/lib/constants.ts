@@ -33,6 +33,17 @@ export const CLAY_PALETTE = {
         deck: '#efe7d9', // shelf surfaces — near the background, quietly present
         post: '#dccfb9', // uprights — a touch deeper so structure still reads
     },
+    // Diorama staging: a base board the whole model sits on, plus per-zone floor
+    // plates. Neutral warm-clay steps — perceptible zone identity, no loud colour.
+    floor: {
+        base: '#e7ddca', // the "table" the model rests on, deeper than background
+        zonePlate: {
+            A: '#efe8da',
+            B: '#e9e0cf',
+            C: '#e2d7c1',
+        } as Record<string, string>,
+    },
+    contactShadow: '#463d2c', // warm shadow tint under the model
     palletStatus: CLAY_PALLET_STATUS_COLORS,
     urgentGlow: '#ff5a3c',
     outline: {
